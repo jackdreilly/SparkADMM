@@ -5,6 +5,7 @@ import utils.OptTypes.{Vec, Matrix}
 import scalala.operators.Implicits._
 import utils.OptFunctions
 import utils.NoisyData
+import spark.SparkContext
 
 
 /**
@@ -19,8 +20,8 @@ object Lasso {
 
   def lassoSolve(A: Matrix,
                  b: Vec,
-                 epsR: Double = .01,
-                 epsS: Double = .01,
+                 epsR: Double = .4,
+                 epsS: Double = .4,
                  rho: Double = .5,
                  maxIters: Int = 100): Vec = {
     val nSamples = A.numRows
@@ -86,11 +87,12 @@ object Lasso {
 
 
   def main(args: Array[String]) {
-    val data = NoisyData.genData(400,10)
-    val state = NoisyData.genState(10)
+    val data = NoisyData.genData(4000,100)
+    val state = NoisyData.genState(100)
     val output = NoisyData.genOutput(state,data)
     val A = data
     val b = output
+    val spark = new SparkContext("local", "SparkPi")
     val x = lassoSolve(A,b)
     println(x)
     val difference: Vec = A*x-b
