@@ -1,4 +1,4 @@
-package convex
+package admm
 
 import scalala.tensor.dense.DenseVectorCol
 import utils.OptTypes.{Vec, Matrix}
