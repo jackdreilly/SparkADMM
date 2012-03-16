@@ -2,10 +2,11 @@ package convex
 
 import scalala.tensor.dense.DenseVectorCol
 import utils.OptTypes.{Vec, Matrix}
-import scalala.operators.Implicits._
 import utils.OptFunctions
 import utils.NoisyData
 import spark.SparkContext
+import admm.GeneralADMM
+import java.util.Map
 
 
 /**
@@ -16,84 +17,36 @@ import spark.SparkContext
  * To change this template use File | Settings | File Templates.
  */
 
-object LeastAbsDev {
+import utils.OptTypes.{Matrix, Vec, UpdateFn}
+import scalala.tensor.dense.DenseMatrix
+import scalala.operators.Implicits._
 
-  def lassoSolve(A: Matrix,
-                 b: Vec,
-                 epsR: Double = .4,
-                 epsS: Double = .4,
-                 rho: Double = .5,
-                 maxIters: Int = 100): Vec = {
-    val nSamples = A.numRows
-    val nFeatures = A.numCols
-    var lastX = DenseVectorCol.zeros[Double](nFeatures)
-    var lastZ = DenseVectorCol.zeros[Double](nSamples)
-    var lastU = DenseVectorCol.zeros[Double](nSamples)
-    var newX = DenseVectorCol.zeros[Double](nFeatures)
-    var newZ = DenseVectorCol.zeros[Double](nSamples)
-    var newU = DenseVectorCol.zeros[Double](nSamples)
-    var doTerm = false
-    for (iter <- 1 to maxIters) {
-      lastX = newX
-      newX = xUpdate(A,b,newZ,newU)
-      lastZ = newZ
-      newZ = zUpdate(A,b,newX,newU,rho)
-      lastU = newU
-      newU = uUpdate(A,b,newX,newZ,lastU)
-      doTerm = terminate(residualPrimal(A,b,newZ,newX),epsR,residualDual(A,newZ,lastZ,rho),epsS)
-      if (doTerm)
-        return newX
-      println(residualPrimal(A,b,newZ,newX).norm(2))
 
-    }
-    return newX
-  }
+object LeastAbsDev extends GeneralADMM {
 
-  def xUpdate(A: Matrix,
-              b: Vec,
-              z: Vec,
-              u: Vec ): Vec =  {
-    val v = b + z - u
-    A \ v
-  }
 
-  def zUpdate(A: Matrix, b: Vec, x: Vec, u: Vec, rho: Double): Vec = {
-    OptFunctions.softThreshold(1/rho)(A*x-b+u)
-  }
 
-  def uUpdate(A: Matrix, b: Vec, x: Vec, z: Vec, uOld: Vec): Vec = {
-    uOld + A*x - z - b
+  val xUpdate: UpdateFn = (A, _, b,_, _, z, u) => A \ (b + z - u)
+  val zUpdate: UpdateFn = (A, _, b,rho, x, _, u) => OptFunctions.softThreshold(1/rho)(A*x-b+u)
+  val uUpdate: UpdateFn = (A, _, b,_, x, z, uOld) => uOld + A*x - z - b
+  def solve(A: Matrix,
+            b: Vec,
+            rho: Double = .5,
+            epsR: Double = .2,
+            epsS: Double = .2,
+            maxIters: Int = 100): Vec = {
+    super.solve(A,-1:*DenseMatrix.eye[Double](b.size,b.size),b,rho,epsR,epsS,maxIters)
   }
-
-  def residualPrimal(A: Matrix,
-                     b: Vec,
-                     z: Vec,
-                     x: Vec ): Vec = {
-    A*x - z - b
-  }
-  def residualDual(A: Matrix,
-                   zNew: Vec,
-                   zOld: Vec,
-                   rho: Double): Vec = {
-    -rho:*A.t*(zNew - zOld)
-  }
-  def terminate(r: Vec,
-                epsR: Double,
-                s: Vec,
-                epsS: Double): Boolean =  {
-    return (r.norm(2) < epsR && s.norm(2) < epsS)
-  }
-
 
 
   def main(args: Array[String]) {
-    val data = NoisyData.genData(4000,100)
-    val state = NoisyData.genState(100)
+    val data = NoisyData.genData(100,10)
+    val state = NoisyData.genState(10)
     val output = NoisyData.genOutput(state,data)
     val A = data
     val b = output
     val spark = new SparkContext("local", "SparkPi")
-    val x = lassoSolve(A,b)
+    val x = LeastAbsDev.solve(A,b)
     println(x)
     val difference: Vec = A*x-b
     println(difference.norm(2))

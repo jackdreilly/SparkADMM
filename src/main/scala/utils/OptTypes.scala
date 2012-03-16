@@ -1,6 +1,7 @@
 package utils
 
 import scalala.tensor.dense.{DenseVectorCol, DenseMatrix}
+import admm.GeneralADMM
 
 
 /**
@@ -14,4 +15,6 @@ import scalala.tensor.dense.{DenseVectorCol, DenseMatrix}
 object OptTypes {
   type Vec = DenseVectorCol[Double]
   type Matrix = DenseMatrix[Double]
+  type UpdateFn = (Matrix,Matrix,Vec, Double, Vec, Vec, Vec) => Vec
 }
+
