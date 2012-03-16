@@ -16,7 +16,7 @@ import spark.SparkContext
  * To change this template use File | Settings | File Templates.
  */
 
-object Lasso {
+object LeastAbsDev {
 
   def lassoSolve(A: Matrix,
                  b: Vec,
