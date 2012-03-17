@@ -9,10 +9,9 @@ package utils
  */
 
 
-import scalala.tensor.dense._;
-import scalala.operators.Implicits._;
+import scalala.tensor.dense._
+import scalala.operators.Implicits._
 import OptTypes.{Matrix,Vec}
-
 
 
 object NoisyData {
