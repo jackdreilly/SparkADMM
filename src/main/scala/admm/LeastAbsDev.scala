@@ -6,7 +6,6 @@ import utils.OptFunctions
 import utils.NoisyData
 import spark.SparkContext
 import admm.GeneralADMM
-import java.util.Map
 
 
 /**
