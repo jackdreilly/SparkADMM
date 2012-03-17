@@ -2,7 +2,9 @@ package utils
 
 
 import OptTypes.Vec
-import scala.math.min
+import scala.math.max
+import scalala.library.Library.linspace
+import scalala.library.Plotting._
 
 
 /**
@@ -16,9 +18,17 @@ import scala.math.min
 object OptFunctions {
   def softThreshold(kappa: Double): (Vec) => Vec = {
     def softKappa(vec: Vec): Vec= {
-      vec.map{(param: Double) => min(1 - kappa/param, 0)*param}
+      vec.map{(param: Double) => max(1 - kappa/param.abs, 0)*param}
     }
     softKappa
+  }
+
+  def main(args: Array[String]) {
+    val kappa = 3.
+    val kappaThreshold = softThreshold(kappa)
+    val tVals = linspace(-5,5,100)
+    plot(tVals,kappaThreshold(tVals))
+
   }
 
 }

@@ -1,9 +1,9 @@
 package admm
 
-import convex.LeastAbsDev
+
 import utils.OptFunctions
 import utils.NoisyData
-import spark.SparkContext
+
 
 
 /**
@@ -43,8 +43,8 @@ object BasisPursuit extends GeneralADMM {
 
 
   def main(args: Array[String]) {
-    val data = NoisyData.genData(60, 400)
-    val state = NoisyData.genState(400)
+    val data = NoisyData.genData(5, 20)
+    val state = NoisyData.genState(20)
     val output = NoisyData.genOutput(state, data)
     val A = data
     val b = output
@@ -52,7 +52,7 @@ object BasisPursuit extends GeneralADMM {
       println("RHO VALUE")
       println(rho)
       println("::::::::::")
-      println(BasisPursuit.solve(A, b))
+      println(BasisPursuit.solve(A, b, rho))
     }
   }
 

@@ -44,7 +44,7 @@ abstract class GeneralADMM {
       lastU = newU
       newU = uUpdate(A,B,c,rho,newX,newZ,lastU)
       if (terminate(A,B,c,lastZ,newZ,newX,rho,epsR,epsS)) return newX
-      println(residualPrimal(A,B,c,newZ,newX).norm(2))
+//      println(residualPrimal(A,B,c,newZ,newX).norm(2))
     }
     return newX
   }
