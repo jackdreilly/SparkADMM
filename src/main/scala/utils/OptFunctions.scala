@@ -24,7 +24,7 @@ object OptFunctions {
   }
 
   def main(args: Array[String]) {
-    val kappa = 3.
+    val kappa = 3.0
     val kappaThreshold = softThreshold(kappa)
     val tVals = linspace(-5,5,100)
     plot(tVals,kappaThreshold(tVals))
