@@ -17,9 +17,11 @@ import spark.SparkContext
 
 object LassoExample extends GeneralADMM{
 
+  var lambda: Double = .1
+
 
   val xUpdate: UpdateFn = (A, _, b,rho, _, z, u) => (A.t * A + rho) \ (A.t * b + rho :* (z - u))
-  val zUpdate: UpdateFn = (_, _, _,rho, x, _, uOld) => OptFunctions.softThreshold(1/rho)(x + u)
+  val zUpdate: UpdateFn = (_, _, _,rho, x, _, uOld) => OptFunctions.softThreshold(lambda/rho)(x + u)
   val uUpdate: UpdateFn = (_, _, _,_, x, z, uOld) => uOld + x - z
 
   def solve(A: Matrix,
