@@ -5,7 +5,6 @@ package admm
  * User: jdr
  * Date: 3/15/12
  * Time: 9:15 PM
- * To change this template use File | Settings | File Templates.
  */
 
 import utils.OptFunctions
@@ -32,7 +31,6 @@ object LeastAbsDev extends GeneralADMM {
             epsS: Double = .001,
             maxIters: Int = 100): Vec = {
     val tvals = linspace(-1/rho*2,1/rho*2,20)
-    plot(tvals,OptFunctions.softThreshold(1/rho)(tvals))
     title(rho.toString)
     super.solve(A,-1:*DenseMatrix.eye[Double](b.size,b.size),b,rho,epsR,epsS,maxIters)
   }
