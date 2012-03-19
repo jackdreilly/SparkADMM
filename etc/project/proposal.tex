@@ -90,17 +90,42 @@ x^* &=& \underset{x}{\text{argmin }} L(x, \nu),
 \end{eqnarray*}
 where $x^*$ and $y^*$ are the two optimal arguments for the primal and the dual problem.
 
-The dual ascent method solves the dual problem using gradient ascent. Assuming that $g$ is differentiable, we can evaluate $\nabla g(\nu)$ with $\nabla g(\nu) = Ax^+ - b$, where $x^+ = \text{argmin}_x L(x, \nu)$. The dual ascent method is given by this iteration:
+The dual ascent method solves the dual problem using gradient ascent. Assuming that $g$ is differentiable, we can evaluate $\nabla g(\nu)$ with $\nabla g(\nu) = Ax^+ - b$, which is the residual of the equality constraint and where $x^+ = \text{argmin}_x L(x, \nu)$. The dual ascent method is given by this iteration:
 \begin{eqnarray*}
 x^{k+1} &:=& \underset{x}{\text{argmin }} L(x, \nu^k) \\
 \nu^{k+1} &:=& \nu^k + \alpha^k (A x^{k+1} - b),
 \end{eqnarray*}
-where $\alpha^k > 0$ is a step size, and the superscript is the iteration counter.
+where $\alpha^k > 0$ is a step size, and the superscript is the iteration counter. We notice that this method is called dual ascent because with appropriate choice of $\alpha^k$, the dual function increases in each step, i.e. $g(\nu^k+1) > g(\nu^k)$. The dual ascent can also be used with non differentiable function under some modifications.
+For an appropriate choice of $\alpha^k$ and under other conditions, we can make $x^k$ and $\nu^k$ converge to optimal primal and dual points. However, there is many example where the dual ascent method cannot be used.
+The dual ascent method is very interesting because it can lead to a decentralized algorithm, meaning that the problem can be split into different peaces, which can be sold in parallel. Then for a separable function $f$, we get:
+\begin{eqnarray*}
+f(x) &=& \sum\limits_{i=1}^N f_i(x_i)
+\end{eqnarray*}
+where $x = (x_1,...,x_N)$ and the variable $x_i \in \mathbb{R}^{n_i}$ are subvectors of $x$. Then we partition the $A$ matrix so that we have:
+\begin{eqnarray*}
+A &=& [A_1 ... A_N] \\
+Ax &=& \sum\limits_{i=1}^N A_ix_i
+\end{eqnarray*}
+Then the Lagrangian is written as:
+\begin{eqnarray*}
+L(x, \nu) = \sum\limits_{i=1}^N L_i(x_i, \nu) = \sum\limits_{i=1}^N (f_i(x_i) + \nu^TA_ix_i - (1/N)\nu^Tb)
+\end{eqnarray*}
+Then the dual ascent algorithm is given by:
+\begin{eqnarray*}
+x_i^{k+1} &:=& \underset{x_i}{\text{argmin }} L_i(x_i, \nu^k)\\
+\nu^{k+1} &:=& \nu^k + \alpha^k(Ax^{k+1} - b)
+\end{eqnarray*}
+We notice that the $x$-minimization can be carried out independently, in parallel, for each $i=1,...,N$
 
 \subsection{Method of Multipliers}
 	\label{Method of Multipliers}
 	
-	eizuhdiuzehdioza
+	The method of multipliers consists in augmenting the convex optimization problem \ref{Dual_ascent_pb}. We consider now:
+\begin{eqnarray}
+\label{M_M_pb}
+\underset{x}{\text{minimize}} & & f(x) +(\rho/2)||Ax - b||_2^2 \\
+\text{subject to} & & Ax = b, \nonumber
+\end{eqnarray}
 
 \subsection{ADMM}
 	\label{ADMM}
