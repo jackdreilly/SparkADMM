@@ -1,9 +1,0 @@
-\BOOKMARK [1][-]{section.1}{Literature review}{}% 1
-\BOOKMARK [1][-]{section.2}{Different software frameworks}{}% 2
-\BOOKMARK [2][-]{subsection.2.1}{Apache Hadoop}{section.2}% 3
-\BOOKMARK [2][-]{subsection.2.2}{Mesos}{section.2}% 4
-\BOOKMARK [2][-]{subsection.2.3}{Spark}{section.2}% 5
-\BOOKMARK [1][-]{section.3}{Alternating Direction Method of Multipliers \(ADMM\)}{}% 6
-\BOOKMARK [2][-]{subsection.3.1}{Dual Ascent}{section.3}% 7
-\BOOKMARK [2][-]{subsection.3.2}{Method of Multipliers}{section.3}% 8
-\BOOKMARK [2][-]{subsection.3.3}{ADMM}{section.3}% 9
