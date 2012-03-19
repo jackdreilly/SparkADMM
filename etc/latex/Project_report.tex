@@ -1,0 +1,135 @@
+\documentclass{article}
+
+\usepackage[latin1]{inputenc}    
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{indentfirst}
+\usepackage[toc,page]{appendix} 
+
+\usepackage{wrapfig}
+\usepackage{graphicx}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{mdwlist}
+\usepackage{booktabs} 
+
+\setlength{\oddsidemargin}{0.25in}
+
+\setlength{\textwidth}{6in}
+
+\setlength{\topmargin}{-0.25in}
+
+\setlength{\headheight}{0.3in}
+
+\setlength{\headsep}{0.2in}
+
+\setlength{\textheight}{9in}
+
+\setlength{\footskip}{0.3in}
+
+\begin{document}
+
+\pagestyle{fancy}
+\lfoot{}
+\rfoot{\thepage}
+\cfoot{}
+\chead{}
+\rhead{} 
+\lhead{}
+
+\title{Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers}       
+\author{Reilly Jack, Prodhomme Boris and Grauzam Johann\\ }       
+\date{\today}         
+\maketitle
+
+\begin{abstract}
+
+	ADMM \cite{ref1}
+	
+\end{abstract}
+
+\section{Literature review}
+ \label{Literature review}
+ 
+	liyhgihgoih
+
+\section{Different software frameworks}
+ \label{Different software frameworks}
+
+\subsection{Apache Hadoop}
+	\label{Apache Hadoop}
+	
+	lrjfzjiozjf
+	
+\subsection{Mesos}
+	\label{Mesos}
+	
+	lshfcizufhoizauh	
+	
+\subsection{Spark}
+	\label{Spark}
+	
+	zdfjzpofjz
+
+
+\section{Alternating Direction Method of Multipliers (ADMM)}
+	\label{Alternating Direction Method of Multipliers (ADMM)}
+	
+\subsection{Dual Ascent}
+	\label{Dual Ascent}
+	
+	Let consider the following convex optimization problem:
+\begin{eqnarray}
+\label{Dual_ascent_pb}
+\underset{x}{\text{minimize}} & & f(x) \\
+\text{subject to} & & Ax = b, \nonumber
+\end{eqnarray}
+with variables $x \in \mathbb{R}^n$, where $A \in \mathbb{R}^{m \times n}$ and $ f : \mathbb{R}^n \to \mathbb{R}$ is convex. 
+The Lagrangian of problem \ref{Dual_ascent_pb} is:
+\begin{eqnarray*}
+\label{Dual_ascent_Lag}
+L(x,\nu) = f(x) + \nu^T (b - Ax)
+\end{eqnarray*}
+and the dual function is:
+\begin{eqnarray*}
+g(\nu) = \underset{x}{\text{min }} L(x, \nu) = - f^{*}(-A^T \nu) - b^T \nu
+\end{eqnarray*}
+where $\nu $ is the dual variable, and $f^*$ is the convex conjugate of $f$. The dual is given by:
+\begin{eqnarray*}
+\underset{\nu}{\text{maximize}} & & g(\nu)
+\end{eqnarray*}
+with variable $\nu \in \mathbb{R}^m$. Assuming that the strong duality holds, the optimal valules of the primal and the dual are the same. Then the following relation holds:
+\begin{eqnarray*}
+x^* &=& \underset{x}{\text{argmin }} L(x, \nu),
+\end{eqnarray*}
+where $x^*$ and $y^*$ are the two optimal arguments for the primal and the dual problem.
+
+The dual ascent method solves the dual problem using gradient ascent. Assuming that $g$ is differentiable, we can evaluate $\nabla g(\nu)$ with $\nabla g(\nu) = Ax^+ - b$, where $x^+ = \text{argmin}_x L(x, \nu)$. The dual ascent method is given by this iteration:
+\begin{eqnarray*}
+x^{k+1} &:=& \underset{x}{\text{argmin }} L(x, \nu^k) \\
+\nu^{k+1} &:=& \nu^k + \alpha^k (A x^{k+1} - b),
+\end{eqnarray*}
+where $\alpha^k > 0$ is a step size, and the superscript is the iteration counter.
+
+\subsection{Method of Multipliers}
+	\label{Method of Multipliers}
+	
+	eizuhdiuzehdioza
+
+\subsection{ADMM}
+	\label{ADMM}
+	
+	eizuhdiuzehdioza
+
+ \bibliographystyle{unsrt}
+ \bibliography{Bibliographie}
+
+\clearpage
+
+\end{document}
