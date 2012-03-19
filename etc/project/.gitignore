@@ -1,3 +1,9 @@
 *.aux
 *.pdf
 *.log
+*.log
+*.bbl
+*.synctex.gz
+*.blg
+*.out
+*.fdb_latexmk
