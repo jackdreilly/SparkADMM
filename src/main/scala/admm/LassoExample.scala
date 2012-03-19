@@ -4,6 +4,7 @@ import utils.OptTypes._
 import scalala.library.Library._
 import scalala.library.Plotting._
 import scalala.tensor.dense.DenseMatrix
+import scalala.operators.Implicits._
 import utils.{NoisyData, OptFunctions}
 import spark.SparkContext
 
@@ -20,8 +21,15 @@ object LassoExample extends GeneralADMM{
   var lambda: Double = .1
 
 
-  val xUpdate: UpdateFn = (A, _, b,rho, _, z, u) => (A.t * A + rho) \ (A.t * b + rho :* (z - u))
-  val zUpdate: UpdateFn = (_, _, _,rho, x, _, uOld) => OptFunctions.softThreshold(lambda/rho)(x + u)
+  val xUpdate: UpdateFn = (A, _, b,rho, _, z, u) =>
+  {
+    val bigA: Matrix = A.t * A
+    val bigAA: Matrix = bigA + rho :* DenseMatrix.eye[Double](A.numCols,A.numCols)
+    val bigB: Vec = A.t * b + rho :* (z - u)
+    bigAA \ bigB
+  }
+
+  val zUpdate: UpdateFn = (_, _, _,rho, x, _, u) => OptFunctions.softThreshold(lambda/rho)(x + u)
   val uUpdate: UpdateFn = (_, _, _,_, x, z, uOld) => uOld + x - z
 
   def solve(A: Matrix,
@@ -45,7 +53,7 @@ object LassoExample extends GeneralADMM{
     val spark = new SparkContext("local", "SparkPi")
     val rhos = linspace(.001,.1,10)
     val errors = spark.parallelize(rhos.toList,5).map { (rho: Double) =>
-      val estimate = LeastAbsDev.solve(A,b,rho)
+      val estimate = LassoExample.solve(A,b,rho)
       val estDiff: Vec = state - estimate
       estDiff.norm(2)
     }.toArray()
