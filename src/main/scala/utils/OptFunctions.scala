@@ -20,14 +20,11 @@ import scalala.library.Plotting._;
  */
 
 object OptFunctions {
-  def softThreshold(kappa: Double): (Vec) => Vec = {
-    def softKappa(vec: Vec): Vec = {
-      vec.map {
-        (param: Double) => max(1 - kappa / param.abs, 0) * param
-      }
-    }
-    softKappa
+  def softThreshold(kappa: Double): Double => Double = {
+    (param: Double) => max(1 - kappa / param.abs, 0) * param
   }
+
+  val softThresholdVec = (kappa: Double) => (vec: Vec) => vec.map(softThreshold(kappa))
 
   def sliceMatrix(mat: Mat, nSlices: Int): Seq[Mat] = {
     assert(mat.numRows % nSlices == 0)
@@ -46,7 +43,7 @@ object OptFunctions {
 
   def main(args: Array[String]) {
     val kappa = 3.0
-    val kappaThreshold = softThreshold(kappa)
+    val kappaThreshold = softThresholdVec(kappa)
     val tVals = linspace(-5, 5, 100)
     plot(tVals, kappaThreshold(tVals))
 

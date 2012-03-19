@@ -1,8 +1,8 @@
 package admm
 
 import utils.OptTypes._
-import scalala.tensor.dense.DenseVectorCol
 import scalala.operators.Implicits._
+import utils.NoisyData.genState
 
 
 /**
@@ -27,12 +27,12 @@ abstract class GeneralADMM {
     val nSamples = A.numRows
     val nFeatures = A.numCols
     val zFeatures = B.numCols
-    var lastX = DenseVectorCol.zeros[Double](nFeatures)
-    var lastZ = DenseVectorCol.zeros[Double](zFeatures)
-    var lastU = DenseVectorCol.zeros[Double](zFeatures)
-    var newX = DenseVectorCol.zeros[Double](nFeatures)
-    var newZ = DenseVectorCol.zeros[Double](zFeatures)
-    var newU = DenseVectorCol.zeros[Double](zFeatures)
+    var lastX = genState(nFeatures)
+    var lastZ = genState(zFeatures)
+    var lastU = genState(zFeatures)
+    var newX = genState(nFeatures)
+    var newZ = genState(zFeatures)
+    var newU = genState(zFeatures)
     var doTerm = false
     for (iter <- 1 to maxIters) {
       lastX = newX
@@ -42,7 +42,7 @@ abstract class GeneralADMM {
       lastU = newU
       newU = uUpdate(A, B, c, rho, newX, newZ, lastU)
       if (terminate(A, B, c, lastZ, newZ, newX, rho, epsR, epsS)) return newX
-      //      println(residualPrimal(A,B,c,newZ,newX).norm(2))
+      println(residualPrimal(A, B, c, newZ, newX).norm(2))
     }
     newX
   }

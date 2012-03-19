@@ -2,7 +2,7 @@ package admm
 
 import utils.NoisyData
 import spark.SparkContext
-import utils.OptFunctions.{sliceMatrix, sliceVector, softThreshold}
+import utils.OptFunctions.{sliceMatrix, sliceVector, softThresholdVec}
 import scalala.tensor.dense._;
 import utils.OptTypes._
 import collection.mutable.MutableList
@@ -13,7 +13,27 @@ import collection.mutable.MutableList
  * Time: 4:02 PM
  */
 
+
 object LocalLasso {
+  def main(args: Array[String]) {
+    val nSamples = 100
+    val nFeatures = 10
+    val sparsity = .5
+    val A = NoisyData.genData(nSamples, nFeatures)
+    val state = NoisyData.genSparseState(nFeatures, sparsity)
+    val b = NoisyData.genOutput(state, A)
+    var xPrev = NoisyData.genState(nFeatures)
+    var xNext = NoisyData.genState(nFeatures)
+    var zPrev = NoisyData.genState(nFeatures)
+    var zNext = NoisyData.genState(nFeatures)
+    var uPrev = NoisyData.genState(nFeatures)
+    var uNext = NoisyData.genState(nFeatures)
+
+
+  }
+}
+
+object SparkLasso {
   def main(args: Array[String]) {
     val nSamples = 100
     val nFeatures = 5
@@ -23,7 +43,7 @@ object LocalLasso {
     val lambda = 1.0
     val sparseness = .5
 
-    val threshold = softThreshold(lambda / rho)
+    val threshold = softThresholdVec(lambda / rho)
 
     val zValues = new MutableList[Vec]()
 

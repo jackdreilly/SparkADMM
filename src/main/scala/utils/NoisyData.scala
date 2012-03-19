@@ -14,12 +14,14 @@ import scala.util.Random.nextDouble
 
 
 object NoisyData {
+  val scale = 100.0
+
   def genData(nSamples: Int, nFeatures: Int): Mat = {
-    DenseMatrix.randn(nSamples, nFeatures)
+    scale :* DenseMatrix.randn(nSamples, nFeatures)
   }
 
   def genState(nFeatures: Int): Vec = {
-    DenseVectorCol.randn(nFeatures)
+    scale :* DenseVectorCol.randn(nFeatures)
   }
 
   def genSparseState(nFeatures: Int, prob: Double): Vec = genState(nFeatures)

@@ -21,7 +21,7 @@ object LeastAbsDev extends GeneralADMM {
 
 
   val xUpdate: UpdateFn = (A, _, b, _, _, z, u) => A \ (b + z - u)
-  val zUpdate: UpdateFn = (A, _, b, rho, x, _, u) => OptFunctions.softThreshold(1 / rho)(A * x - b + u)
+  val zUpdate: UpdateFn = (A, _, b, rho, x, _, u) => OptFunctions.softThresholdVec(1 / rho)(A * x - b + u)
   val uUpdate: UpdateFn = (A, _, b, _, x, z, uOld) => uOld + A * x - z - b
 
   def solve(A: Mat,

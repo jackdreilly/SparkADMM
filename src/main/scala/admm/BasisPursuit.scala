@@ -6,10 +6,10 @@ import utils.NoisyData
 
 
 /**
-  * User: jdr
+ * User: jdr
  * Date: 3/15/12
  * Time: 9:15 PM
-  */
+ */
 
 import utils.OptTypes.{Mat, Vec, UpdateFn}
 import scalala.tensor.dense.DenseMatrix
@@ -28,7 +28,7 @@ object BasisPursuit extends GeneralADMM {
     val bigAb = bigA * b
     (precEye - biggerA) * zDiffu + bigAb
   }
-  val zUpdate: UpdateFn = (_, _, _, rho, x, _, u) => OptFunctions.softThreshold(1 / rho)(x + u)
+  val zUpdate: UpdateFn = (_, _, _, rho, x, _, u) => OptFunctions.softThresholdVec(1 / rho)(x + u)
   val uUpdate: UpdateFn = (_, _, _, _, x, z, uOld) => uOld + x - z
 
   def solve(A: Mat,
