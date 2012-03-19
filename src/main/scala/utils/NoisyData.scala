@@ -14,7 +14,7 @@ import scala.util.Random.nextDouble
 
 
 object NoisyData {
-  val scale = 100.0
+  val scale = 1.0
 
   def genData(nSamples: Int, nFeatures: Int): Mat = {
     scale :* DenseMatrix.randn(nSamples, nFeatures)
@@ -24,9 +24,10 @@ object NoisyData {
     scale :* DenseVectorCol.randn(nFeatures)
   }
 
-  def genSparseState(nFeatures: Int, prob: Double): Vec = genState(nFeatures)
-    .map {
-    case (par) => zeroer(par, prob)
+  def genSparseState(nFeatures: Int, prob: Double): Vec = sparsify(genState(nFeatures), prob)
+
+  def sparsify(vec: Vec,  prob: Double): Vec = {
+    vec.map(zeroer(_,prob))
   }
 
   def zeroer(param: Double, prob: Double): Double = {
