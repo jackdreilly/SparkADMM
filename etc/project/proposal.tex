@@ -126,11 +126,30 @@ We notice that the $x$-minimization can be carried out independently, in paralle
 \underset{x}{\text{minimize}} & & f(x) +(\rho/2)||Ax - b||_2^2 \\
 \text{subject to} & & Ax = b, \nonumber
 \end{eqnarray}
+Where $\rho > 0$ is called the penalty parameter. This is an equivalent problem because the equality constraint imposes to have $||Ax - b|| = 0$. Then the augmented Lagrangian becomes:
+\begin{eqnarray*}
+L_{rho}(x,\nu) = f(x) + \nu^T(Ax - b) + (\rho/2)||Ax - b||_2^2
+\end{eqnarray*}
+The augmented methods are usefull to make more robust the dual ascent method for example, and to evoid assumption as strict convexity or finitness of $f$. Then applying the dual ascent method to this new problem, we obtain the following algorithm:
+\begin{eqnarray}
+\label{M_M_alg}
+x^{k+1} &:=& \underset{x}{\text{argmin }} L_{\rho}(x, \nu^k) \\
+\nu^{k+1} &:=& \nu^k + \rho (A x^{k+1} - b),
+\end{eqnarray}
+This is known as the method of multipliers. This method converges under far more general conditions than dual ascent, including cases when $f$ takes on the value $+ \infty$ or is not strictly convex. 
+The improved convergence properties reached thanks to the method of multipliers has a cost. Indeed we notice now that even if $f$ is separable, the augmented Lagrangian $L_{rho}$ is not separable anymore with the basic algorithm given in \ref{M_M_alg}. Then we cannot use decomposition anymore. This is one the reason why the ADMM was created.
+
 
 \subsection{ADMM}
 	\label{ADMM}
 	
-	eizuhdiuzehdioza
+	The dual ascent method and the method of multipliers are both really usefull as described above. ADMM is an algorithm that tries to gather advantages of these two method, in minimizing the cost due to this combination. The problem treated will be under the following shape:
+\begin{eqnarray}
+\label{ADMM_pb}
+\underset{x,z}{\text{minimize}} & & f(x) + g(z) \\
+\text{subject to} & & Ax + Bz = c, \nonumber
+\end{eqnarray}	
+with variables $x \in \mathbb{R}^n$ and $z \in \mathbb{R}^m$, where $A \in \mathbb{R}^{p \times n}$, $B \in \mathbb{R}^{p \times m}$, and $c \in \mathbb{R}^{p}$.
 
  \bibliographystyle{unsrt}
  \bibliography{Bibliographie}
