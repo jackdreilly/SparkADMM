@@ -1,4 +1,4 @@
-package utils
+package testutils
 
 /**
  * User: jdr
@@ -20,7 +20,7 @@ class OptFunctionsSuite extends FunSuite with BeforeAndAfter {
   val kNegDouble = kNeg * 2
   val nRows = 20
   val nCols = 5
-  val mat = DenseMatrix.rand(nRows,nCols)
+  val mat = DenseMatrix.rand(nRows, nCols)
   val vec = DenseVector.rand(nRows)
 
   test("soft threshold should be zero when abs val < threshold") {
@@ -33,16 +33,16 @@ class OptFunctionsSuite extends FunSuite with BeforeAndAfter {
   }
   test("duplicator should have same value repeated x times") {
     val size = 10
-    val duplicated =  duplicate(kappa, size)
-    duplicated.foreach(current => assert(current===kappa))
+    val duplicated = duplicate(kappa, size)
+    duplicated.foreach(current => assert(current === kappa))
     assert(duplicated.size === size)
   }
   test("matrix slice should have x slices of same width") {
     val nSlices = 5
-    val sliced = sliceMatrix(mat,nSlices)
+    val sliced = sliceMatrix(mat, nSlices)
     sliced.foreach(m => {
       assert(m.numCols === nCols)
-      assert(m.numRows === nRows/nSlices)
+      assert(m.numRows === nRows / nSlices)
     })
     assert(sliced.length === nSlices)
   }
@@ -53,9 +53,9 @@ class OptFunctionsSuite extends FunSuite with BeforeAndAfter {
   }
   test("vec slice should have x slices of same size") {
     val nSlices = 5
-    val sliced = sliceVector(vec,nSlices)
+    val sliced = sliceVector(vec, nSlices)
     sliced.foreach(v => {
-      assert(v.size === nRows/nSlices)
+      assert(v.size === nRows / nSlices)
     })
     assert(sliced.length === nSlices)
   }
@@ -64,7 +64,6 @@ class OptFunctionsSuite extends FunSuite with BeforeAndAfter {
       val slices = sliceVector(vec, 3)
     }
   }
-
 
 
 }

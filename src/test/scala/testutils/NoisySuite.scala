@@ -1,4 +1,4 @@
-package utils
+package testutils
 
 /**
  * User: jdr
@@ -22,11 +22,11 @@ class NoisySuite extends FunSuite {
       vec.filter(_ == 0.0).size >= vec.length * (1 - sparsity)
     }
     sparsities.foreach(lambda => {
-      val vectors = for (_ <- 1 to nRuns) yield NoisyData.genSparseState(nFeatures,lambda)
-      val passingVectors = vectors.filter(passingSparsity(_,lambda))
-      val passingRate = (passingVectors.size).toDouble/nRuns
+      val vectors = for (_ <- 1 to nRuns) yield NoisyData.genSparseState(nFeatures, lambda)
+      val passingVectors = vectors.filter(passingSparsity(_, lambda))
+      val passingRate = (passingVectors.size).toDouble / nRuns
       println(passingRate)
-      assert(passingRate >= .5 - successBuffer)
+      assert(passingRate >=.5 - successBuffer)
     })
   }
 
