@@ -9,32 +9,31 @@ import scala.io._
 import cern.colt.matrix.impl.SparseDoubleMatrix2D
 
 object RCV1Data  {
-  def main(args: Array[String]) {
-    val s = Source.fromFile("/Users/jdr/Downloads/topic_hits.admm.data")
-    val labels = s.getLines().next().split(" ").map(_.toInt)
-    val t = Source.fromFile("/Users/jdr/Downloads/word_counts.admm.data")
-    val docs = for (line <- t.getLines()) yield {
-      for (pair <- line.split(":")) yield {
+  def rcv1IDF(): SparseDoubleMatrix2D =  {
+    val nSamples = 23149
+    val nFeatures = 47236
+    val data = new SparseDoubleMatrix2D(nSamples,nFeatures)
+    for ((line, docIndex)<- Source.fromFile("etc/data/word_counts.admm.data").getLines().zipWithIndex) {
+      for (pair <- line.split(":")) {
         val splits = pair.split(", ")
         val front = splits(0)
         val back = splits(1)
         val feature = front.substring(1,front.length()).toInt
         val weight = back.substring(0,back.length() - 1).toDouble
-        (feature, weight)
+        data.setQuick(docIndex,feature,weight)
       }
     }
-    val da = docs.toList
-    val nFeatures = 48000
-    val nSamples =  da.size
-    val data = new SparseDoubleMatrix2D(nSamples, nFeatures)
-    for ((array, docIndex)<- da.zipWithIndex) {
-      for ((feature, weight) <- array) {
-        data.set(docIndex, feature,weight)
-      }
-    }
+    data
+  }
 
-    println(data.get(0,25503))
-
+  val labels = (index: Int) => {
+    val s = Source.fromFile("etc/data/topic_hits.admm.data")
+    s.getLines().drop(index - 1).next().split(" ").map(_.toInt)
+  }
+  
+  def main(args: Array[String]) {
+    val data = rcv1IDF()
+    val labs = labels(0)
   }
 
 
