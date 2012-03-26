@@ -21,7 +21,7 @@ object LassoExample extends GeneralADMM {
     val bigA: Mat = A.t * A
     val bigAA: Mat = bigA + rho :* DenseMatrix.eye[Double](A.numCols, A.numCols)
     val bigB: Vec = A.t * b + rho :* (z - u)
-    bigAA \ bigB
+    bigAA \ (bigB)
   }
 
   val zUpdate: UpdateFn = (_, _, _, rho, x, _, u) => OptFunctions.softThresholdVec(lambda / rho)(x + u)
@@ -38,15 +38,19 @@ object LassoExample extends GeneralADMM {
   }
 
   def main(args: Array[String]) {
-    val data = NoisyData.genData(20, 5)
+    val data = NoisyData.genData(5, 5)
     val state: Vec = NoisyData.genSparseState(5, .5)
     println("state:")
     println(state)
     println()
     val output = NoisyData.genOutput(state, data)
     val A = data
+    println(A)
+    println()
     val b = output
+    println(b)
     val rho = 1.0
+    println()
     val estimate = LassoExample.solve(A, b, rho)
     println(estimate)
   }
