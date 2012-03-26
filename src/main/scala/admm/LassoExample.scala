@@ -38,7 +38,7 @@ object LassoExample extends GeneralADMM {
   }
 
   def main(args: Array[String]) {
-    val data = NoisyData.genData(5, 5)
+    val data = NoisyData.genData(20, 5)
     val state: Vec = NoisyData.genSparseState(5, .5)
     println("state:")
     println(state)
