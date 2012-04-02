@@ -8,42 +8,36 @@ package admm
  * To change this template use File | Settings | File Templates.
  */
 
-import java.util.Random
-import utils.VectorBis
+import cern.colt.matrix.impl.{SparseDoubleMatrix1D, SparseDoubleMatrix2D}
 
 object LocalLogR {
-  val N = 10000  // Number of data points
-  val D = 10   // Number of dimensions
-  val R = 0.7  // Scaling factor
   val ITERATIONS = 5
-  val rand = new Random(42)
-
-  case class DataPoint(x: VectorBis, y: Double)
-
-  def generateData = {
-    def generatePoint(i: Int) = {
-      val y = if(i % 2 == 0) -1 else 1
-      val x = VectorBis(D, _ => rand.nextGaussian + y * R)
-      DataPoint(x, y)
-    }
-    Array.tabulate(N)(generatePoint)
-  }
 
   def main(args: Array[String]) {
-    val data = generateData
+    val nSamples = 10
+    val nFeatures = 20
+    val sparseData = new SparseDoubleMatrix2D(nSamples,nFeatures)
+    val sparseOutput = new SparseDoubleMatrix1D(nSamples)
+
+
+    var p = new SparseDoubleMatrix1D(nFeatures)
 
     // Initialize w to a random value
-    var w = VectorBis(D, _ => 2 * rand.nextDouble - 1)
+    var w = new SparseDoubleMatrix1D(nFeatures)
     println("Initial w: " + w)
 
     for (i <- 1 to ITERATIONS) {
       println("On iteration " + i)
-      var gradient = VectorBis.zeros(D)
-      for (p <- data) {
-        val scale = (1 / (1 + math.exp(-p.y * (w dot p.x))) - 1) * p.y
-        gradient +=  scale * p.x
+      var gradient = new SparseDoubleMatrix1D(nFeatures)
+      for (j <- 1 to nSamples) {
+        for (k <- 1 to  nFeatures) {
+          p.setQuick(k,sparseData.getQuick(j,k))
+        }
+       val scale = (1 / (1 + math.exp(-sparseOutput.getQuick (j) * w.zDotProduct(p))) - 1) * sparseOutput.getQuick (j)
+
+       gradient.assign(p, cern.jet.math.Functions.plusMult(scale))
       }
-      w -= gradient
+      w.assign(gradient, cern.jet.math.Functions.minus)
     }
 
     println("Final w: " + w)
