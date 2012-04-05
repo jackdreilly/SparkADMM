@@ -123,9 +123,11 @@ object SparseLogisticRegression {
   }
 
   def main(args: Array[String]) {
-    val nDocs = 500
+    val nDocs = args(0).toInt
     val nSlices = 1
-    val nFeatures = 400
+    val nFeatures = args(1).toInt
+    SparseLogisticRegression.lambda = args(2).toDouble
+    SparseLogisticRegression.rho = args(3).toDouble
     val A = rcv1IDF(nDocs, nSlices, nFeatures).head
     val b = labels(0, nDocs, nSlices).head
     val xEstimated = SparseLogisticRegression.solve(A, b)
