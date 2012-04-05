@@ -1,7 +1,7 @@
 package utils
 
 
-import OptTypes.{Vec, Mat}
+import OptTypes.{Vec, Mat, VecSp}
 import scala.math.max
 
 import scalala.tensor.::;
@@ -13,6 +13,7 @@ import scalala.library.Library._;
 import scalala.library.Plotting._
 import scalala.tensor.mutable.Tensor
 import scalala.tensor.dense.DenseVectorCol
+import cern.colt.function.DoubleFunction
 ;
 
 
@@ -28,6 +29,12 @@ object OptFunctions {
   }
 
   val softThresholdVec = (kappa: Double) => (vec: Vec) => vec.map(softThreshold(kappa))
+
+  def softThresholdSp(kappa: Double) = new DoubleFunction {
+    def apply(param: Double): Double = cern.jet.math.Functions.max(0, param - kappa) - cern.jet.math.Functions.max (0, -param - kappa)
+  }
+
+  val softThresholdVecSp = (kappa: Double) =>  (vec: VecSp) => vec.assign(softThresholdSp(kappa))
 
   def sliceMatrix(mat: Mat, nSlices: Int): Seq[Mat] = {
     assert(mat.numRows % nSlices == 0)

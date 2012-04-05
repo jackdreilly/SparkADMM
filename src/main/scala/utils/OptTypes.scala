@@ -1,6 +1,7 @@
 package utils
 
 import scalala.tensor.dense.{DenseVectorCol, DenseMatrix}
+import cern.colt.matrix.impl.{SparseDoubleMatrix1D}
 
 
 /**
@@ -13,5 +14,6 @@ object OptTypes {
   type Vec = DenseVectorCol[Double]
   type Mat = DenseMatrix[Double]
   type UpdateFn = (Mat, Mat, Vec, Double, Vec, Vec, Vec) => Vec
+  type VecSp = SparseDoubleMatrix1D
 }
 
