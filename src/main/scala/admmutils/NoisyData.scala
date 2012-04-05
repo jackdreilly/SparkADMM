@@ -1,4 +1,4 @@
-package utils
+package admmutils
 
 /**
  * User: jdr
@@ -26,8 +26,8 @@ object NoisyData {
 
   def genSparseState(nFeatures: Int, prob: Double): Vec = sparsify(genState(nFeatures), prob)
 
-  def sparsify(vec: Vec,  prob: Double): Vec = {
-    vec.map(zeroer(_,prob))
+  def sparsify(vec: Vec, prob: Double): Vec = {
+    vec.map(zeroer(_, prob))
   }
 
   def zeroer(param: Double, prob: Double): Double = {

@@ -6,10 +6,10 @@ package testutils
  * Time: 12:42 AM
  */
 
-import utils.NoisyData
+import admmutils.NoisyData
 import org.scalatest.FunSuite
 import scalala.library.Library.linspace
-import utils.OptTypes._
+import admmutils.OptTypes._
 
 class NoisySuite extends FunSuite {
 

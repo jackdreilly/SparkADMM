@@ -1,8 +1,8 @@
 package admm
 
-import utils.OptTypes._
+import admmutils.OptTypes._
 import scalala.operators.Implicits._
-import utils.NoisyData.genState
+import admmutils.NoisyData.genState
 
 
 /**

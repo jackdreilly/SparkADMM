@@ -1,4 +1,4 @@
-package utils
+package admmutils
 
 import scalala.tensor.dense.{DenseVectorCol, DenseMatrix}
 

@@ -1,4 +1,4 @@
-package utils
+package admmutils
 
 
 import OptTypes.{Vec, Mat}
@@ -10,8 +10,6 @@ import scalala.tensor.::;
 import scalala.library.Library._;
 
 
-import scalala.library.Plotting._
-import scalala.tensor.mutable.Tensor
 import scalala.tensor.dense.DenseVectorCol
 ;
 
@@ -24,7 +22,7 @@ import scalala.tensor.dense.DenseVectorCol
 
 object OptFunctions {
   def softThreshold(kappa: Double): Double => Double = {
-    (param: Double) => max(0, param - kappa) - max (0, -param - kappa)
+    (param: Double) => max(0, param - kappa) - max(0, -param - kappa)
   }
 
   val softThresholdVec = (kappa: Double) => (vec: Vec) => vec.map(softThreshold(kappa))
@@ -40,8 +38,9 @@ object OptFunctions {
     val sliceWidth: Int = vec.size / nSlices
     for (i <- 0 until nSlices) yield vec(i * sliceWidth until (i + 1) * sliceWidth).toDense.asInstanceOf[Vec]
   }
-  val normalizeMat = (mat: Mat) => mat:/norm(mat.data,2)
-  val normalizeVec = (vec: Vec) => vec:/vec.norm(2)
+
+  val normalizeMat = (mat: Mat) => mat :/ norm(mat.data, 2)
+  val normalizeVec = (vec: Vec) => vec :/ vec.norm(2)
 
   def duplicate[A](single: A, n: Int): Seq[A] = for (i <- 0 until n) yield single
 
@@ -49,7 +48,7 @@ object OptFunctions {
   def main(args: Array[String]) {
     val kappa = 3.0
     val kappaThreshold = softThresholdVec(kappa)
-    val test = DenseVectorCol[Double](-5.0,2.0,-2.0,5.0,3.1)
+    val test = DenseVectorCol[Double](-5.0, 2.0, -2.0, 5.0, 3.1)
     println(test.t)
     println(softThresholdVec(kappa)(test).t)
 

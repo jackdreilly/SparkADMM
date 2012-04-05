@@ -7,10 +7,10 @@ package admm
  * Time: 9:15 PM
  */
 
-import utils.OptFunctions
-import utils.NoisyData
+import admmutils.OptFunctions
+import admmutils.NoisyData
 import spark.SparkContext
-import utils.OptTypes.{Mat, Vec, UpdateFn}
+import admmutils.OptTypes.{Mat, Vec, UpdateFn}
 import scalala.tensor.dense.DenseMatrix
 import scalala.operators.Implicits._
 import scalala.library.Library.linspace
