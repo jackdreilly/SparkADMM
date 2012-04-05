@@ -13,11 +13,18 @@ with open('rcv1_topics_train.svm','r') as f_read:
 	docs.append(parse_line(line))
 
 
+def main1():
+    with open('word_counts.admm.data','w') as f_words:
+        with open('topic_hits.admm.data','w') as f_topics:
+            for topics,words in docs:
+                f_words.write(':'.join(map(str,words)))
+                f_words.write('\n')
+                f_topics.write(' '.join(str(int(i in topics)) for i in range(103)))
+                f_topics.write('\n')
 
-with open('word_counts.admm.data','w') as f_words:
-    with open('topic_hits.admm.data','w') as f_topics:
-	for topics,words in docs:
-	    f_words.write(':'.join(map(str,words)))
-            f_words.write('\n')
-	    f_topics.write(' '.join(str(int(i in topics)) for i in range(103)))
+def main2():
+    with open('topic_hits_transpose.admm.data','w') as f_topics:
+        for i in range(103):
+            f_topics.write(' '.join(str(int(i in topics)) for topics,words in docs))
             f_topics.write('\n')
+main2()            

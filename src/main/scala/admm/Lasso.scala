@@ -1,10 +1,9 @@
 package admm
 
-import utils.NoisyData
+import admmutils.NoisyData
 import spark.SparkContext
-import utils.OptFunctions._
-import utils.OptTypes._
-import collection.mutable.MutableList
+import admmutils.OptFunctions._
+import admmutils.OptTypes._
 import scalala.tensor.dense._;
 import scalala.operators.Implicits._;
 
@@ -24,24 +23,24 @@ object LocalLasso {
     val rho = 1.0
     val lambda = 5.0
 
-    val A = DenseMatrix.randn(nSamples,nFeatures)
-    val state = NoisyData.sparsify(DenseVectorCol.randn(nFeatures),sparsity)
-    val b: DenseVectorCol[Double] = NoisyData.genOutput(state,A)
+    val A = DenseMatrix.randn(nSamples, nFeatures)
+    val state = NoisyData.sparsify(DenseVectorCol.randn(nFeatures), sparsity)
+    val b: DenseVectorCol[Double] = NoisyData.genOutput(state, A)
 
-    val Atb: DenseVectorCol[Double] = A.t*b
-    val AtArhoI =  (A.t*A :+ rho:*DenseMatrix.eye[Double](nFeatures)).toDense
+    val Atb: DenseVectorCol[Double] = A.t * b
+    val AtArhoI = (A.t * A :+ rho :* DenseMatrix.eye[Double](nFeatures)).toDense
 
     var x: DenseVectorCol[Double] = DenseVectorCol.zeros[Double](nFeatures)
     var z: DenseVectorCol[Double] = DenseVectorCol.zeros[Double](nFeatures)
     var u: DenseVectorCol[Double] = DenseVectorCol.zeros[Double](nFeatures)
-    
+
     for (i <- 1 to nIters) {
-      x = AtArhoI \ (Atb :+ (rho:*(z :- u)).asInstanceOf[DenseVectorCol[Double]])
-      z = softThresholdVec(lambda/rho)(x + u)
+      x = AtArhoI \ (Atb :+ (rho :* (z :- u)).asInstanceOf[DenseVectorCol[Double]])
+      z = softThresholdVec(lambda / rho)(x + u)
       println(z.t)
       u = u + x - z
     }
-    println(DenseMatrix(state.data,x.data,z.data))
+    println(DenseMatrix(state.data, x.data, z.data))
   }
 }
 
@@ -52,7 +51,7 @@ object SparkLasso {
   val maxIters = 1000
   val nMaps = 100
 
-  def solve(A: Mat,  b: Vec) : Vec = {
+  def solve(A: Mat, b: Vec): Vec = {
     // dimension stuff
     val nSamples = A.numRows
     val nFeatures = A.numCols
@@ -99,6 +98,7 @@ object SparkLasso {
     // return value
     z
   }
+
   def main(args: Array[String]) {
     val nSamples = 10000
     val nFeatures = 50
@@ -106,7 +106,7 @@ object SparkLasso {
     val A = normalizeMat(NoisyData.genData(nSamples, nFeatures))
     val trueFeatures = normalizeVec(NoisyData.genSparseState(nFeatures, sparseness))
     val noisyOutput = NoisyData.genOutput(trueFeatures, A)
-    val estFeatures = solve(A,noisyOutput)
+    val estFeatures = solve(A, noisyOutput)
     println(trueFeatures.t)
     println(estFeatures.t)
   }

@@ -1,10 +1,10 @@
 package admm
 
-import utils.OptTypes._
+import admmutils.OptTypes._
 import scalala.library.Library._
 import scalala.tensor.dense.{DenseMatrix, DenseVector}
 import scalala.operators.Implicits._
-import utils.{NoisyData, OptFunctions}
+import admmutils.{NoisyData, OptFunctions}
 
 /**
  * User: Jojo

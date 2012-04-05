@@ -7,7 +7,7 @@ package testutils
  */
 
 import org.scalatest.{FunSuite, BeforeAndAfter}
-import utils.OptFunctions._
+import admmutils.OptFunctions._
 import scalala.tensor.dense.{DenseVector, DenseMatrix}
 
 class OptFunctionsSuite extends FunSuite with BeforeAndAfter {
