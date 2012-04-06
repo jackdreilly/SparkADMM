@@ -7,7 +7,7 @@ package data
  */
 
 import scala.io._
-import cern.colt.matrix.impl.{SparseDoubleMatrix2D, SparseDoubleMatrix1D}
+import cern.colt.matrix.tdouble.impl.{SparseDoubleMatrix2D, SparseDoubleMatrix1D}
 import admmutils.ListHelper.list2helper
 
 object RCV1Data {

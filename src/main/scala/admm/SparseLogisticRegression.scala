@@ -7,71 +7,77 @@ package admm
  */
 
 
-import cern.colt.matrix.impl._
-import cern.colt.matrix.linalg.Algebra
-import cern.jet.math.Functions
-import cern.colt.matrix.{DoubleFactory1D, DoubleMatrix2D, DoubleFactory2D, DoubleMatrix1D}
+import cern.colt.matrix.tdouble.impl._
+import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra
+import cern.jet.math.tdouble.DoubleFunctions
+import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleMatrix2D, DoubleFactory2D, DoubleMatrix1D}
 import scala.util.control.Breaks._
-import cern.colt.function.DoubleFunction
+import cern.colt.function.tdouble.DoubleFunction
 import data.RCV1Data.{labels, rcv1IDF}
+import scalala.library.Plotting.plot
+import scalala.library.Library.linspace
 
 object SparseLogisticRegression {
   var lambda = .3
   var rho = .01
-  val algebra = new Algebra()
+  val algebra = new DenseDoubleAlgebra()
   val max_iter = 100
   val shrinkage = new DoubleFunction() {
     def apply(p1: Double): Double = {
       math.max(0, 1 - lambda / rho / math.abs(p1)) * p1
+    }
+    def plotShit() {
+      val t = linspace(-3,3,100)
+      plot(t,t.map(apply(_)))
     }
   }
 
   def solve(A: SparseDoubleMatrix2D, b: SparseDoubleMatrix1D): DoubleMatrix1D = {
     val n = A.columns()
     val m = A.rows()
-    val x = DoubleFactory1D.dense.make(n + 1, 0.0)
-    val u = DoubleFactory1D.dense.make(n + 1, 0.0)
-    val z = DoubleFactory1D.dense.make(n + 1, 0.0)
+    val x = DoubleFactory1D.dense.make(n + 1, 1.0)
+    val u = DoubleFactory1D.dense.make(n + 1, 1.0)
+    val z = DoubleFactory1D.dense.make(n + 1, 1.0)
     val negA = A.copy()
-    negA.assign(Functions.neg)
+    negA.assign(DoubleFunctions.neg)
     val negb = DoubleFactory2D.sparse.make(m, 1)
-    negb.viewColumn(0).assign(b).assign(Functions.neg)
+    negb.viewColumn(0).assign(b).assign(DoubleFunctions.neg)
     val C = DoubleFactory2D.sparse.appendColumns(negb, negA)
 
     def xUpdate() {
       def gradient(x: DoubleMatrix1D): DoubleMatrix1D = {
         val expTerm = new DenseDoubleMatrix1D(m)
         C.zMult(x, expTerm, 1.0, 1.0, false)
-        expTerm.assign(Functions.exp)
+        expTerm.assign(DoubleFunctions.exp)
         val t1 = expTerm.copy()
-        t1.assign(Functions.plus(1.0)).assign(expTerm, Functions.div).assign(Functions.inv)
+        t1.assign(DoubleFunctions.plus(1.0)).assign(expTerm, DoubleFunctions.div).assign(DoubleFunctions.inv)
         val t2 = C.zMult(t1, null, 1.0, 1.0, true)
         val t3 = x.copy()
-        t3.assign(z, Functions.minus).assign(u, Functions.plus).assign(Functions.mult(rho))
+        t3.assign(z, DoubleFunctions.minus).assign(u, DoubleFunctions.plus).assign(DoubleFunctions.mult(rho))
         val grad = t2.copy()
-        grad.assign(t3, Functions.plus)
+        grad.assign(t3, DoubleFunctions.plus)
         grad
       }
       def hessian(x: DoubleMatrix1D): DoubleMatrix2D = {
         val expTerm = new DenseDoubleMatrix1D(m)
         C.zMult(x, expTerm, 1.0, 1.0, false)
-        expTerm.assign(Functions.exp)
+        expTerm.assign(DoubleFunctions.exp)
         val t1 = expTerm.copy()
-        t1.assign(Functions.plus(1.0)).assign(Functions.square).assign(expTerm, Functions.div).assign(Functions.inv)
+        t1.assign(DoubleFunctions.plus(1.0)).assign(DoubleFunctions.square).assign(expTerm, DoubleFunctions.div).assign(DoubleFunctions.inv)
         val diag = DoubleFactory2D.dense.diagonal(t1)
         val tmp = C.zMult(diag, null, 1.0, 1.0, true, false)
         val sln = tmp.zMult(C, null, 1.0, 1.0, false, false)
-        sln.assign(Functions.plus(rho))
+        sln.assign(DoubleFunctions.plus(rho))
         sln
       }
       def loss(x: DoubleMatrix1D): Double = {
         val expTerm = new DenseDoubleMatrix1D(m)
         C.zMult(x, expTerm, 1.0, 1.0, false)
-        expTerm.assign(Functions.exp)
+        expTerm.assign(DoubleFunctions.exp)
         val t1 = expTerm.copy()
-        t1.assign(Functions.plus(1.0)).assign(Functions.log)
+        t1.assign(DoubleFunctions.plus(1.0)).assign(DoubleFunctions.log)
         val t2 = x.copy()
-        t2.assign(z, Functions.minus).assign(u, Functions.plus)
+        t2.assign(z, DoubleFunctions.minus).assign(u, DoubleFunctions.plus)
         val norm = algebra.norm2(t2)
         norm * norm * rho / 2 + t1.zSum()
       }
@@ -94,27 +100,27 @@ object SparseLogisticRegression {
           var t = 1.0
           while ( {
             val scaledDx = dx.copy()
-            scaledDx.assign(Functions.mult(t))
+            scaledDx.assign(DoubleFunctions.mult(t))
             val diffX = x.copy()
-            diffX.assign(scaledDx, Functions.plus)
+            diffX.assign(scaledDx, DoubleFunctions.plus)
             loss(diffX) > fx + alpha * t * dfx
           }) {
             t *= beta
           }
           val scaledDx = dx.copy()
-          scaledDx.assign(Functions.mult(t))
-          x.assign(scaledDx, Functions.plus)
+          scaledDx.assign(DoubleFunctions.mult(t))
+          x.assign(scaledDx, DoubleFunctions.plus)
         }
       }
     }
     def zUpdate() {
-      z.assign(x).assign(u, Functions.plus).assign(shrinkage)
+      z.assign(x).assign(u, DoubleFunctions.plus).assign(shrinkage)
     }
     def uUpdate() {
-      u.assign(x, Functions.plus).assign(z, Functions.minus)
+      u.assign(x, DoubleFunctions.plus).assign(z, DoubleFunctions.minus)
     }
     for (_ <- 1 to max_iter) {
-      println(x)
+      println(z.cardinality().toDouble/z.size())
       xUpdate()
       zUpdate()
       uUpdate()
