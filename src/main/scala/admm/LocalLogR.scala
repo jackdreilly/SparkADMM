@@ -15,7 +15,7 @@ import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleMatrix1D}
 
 object LocalLogR {
   type DataPair = (SparseDoubleMatrix2D, SparseDoubleMatrix1D)
-  val ITERATIONS = 300
+  val ITERATIONS = 20
 
   def solve(sparseData: SparseDoubleMatrix2D, sparseOutput: SparseDoubleMatrix1D): DoubleMatrix1D ={
     val nSamples = sparseData.rows()
@@ -43,29 +43,40 @@ object LocalLogR {
 
   def learnAndCheck(trainSet: DataPair, testSet: DataPair) {
     val wTrain = solve(trainSet._1, trainSet._2)
-    println("wTrain")
-    println(wTrain)
+    //println("wTrain")
+    //println(wTrain)
     val ATest = trainSet._1
-    println("Atest card")
-    println(ATest.cardinality())
-    // println("ATest")
-    // println(ATest.viewRow(4))
-    val bTest = trainSet._2
-    // println("bTest")
-    // println(bTest)
+    //println("Atest card")
+    //println(ATest.cardinality())
+    //println("ATest")
+    //println(ATest)
+    val bTrain = trainSet._2
+    //println("bTrain")
+    //println(bTrain)
+    val bTest = testSet._2
+    //println("bTest")
+    //println(bTest)
+    //println("bTest card")
+    //println(bTest.cardinality())
     val bEst = ATest.zMult(wTrain,null,1.0,1.0,false)
     //println("bEst")
     //println(bEst)
     bEst.assign(DoubleFunctions.sign)
     //println("bEst sign")
     //println(bEst)
-    // println("bTest")
-    // println(bTest)
+    //println("bEst card")
+    //println(bEst.cardinality())
+    //println("bTest")
+    //println(bTest)
     bTest.assign(DoubleFunctions.mult(2.0))
-         .assign(DoubleFunctions.minus(1.0))
-         .assign(bEst,DoubleFunctions.minus)
-    // println("bTest - bEst")
-    // println(bTest)
+    //println("2*bTest")
+    //println(bTest)
+    bTest.assign(DoubleFunctions.minus(1.0))
+    //println("2*bTest-1")
+    //println(bTest)
+    bTest.assign(bEst,DoubleFunctions.minus)
+    //println("bTest - bEst")
+    //println(bTest)
     println("result")
     println(1.0*bTest.cardinality()/bTest.size())
   }
@@ -74,11 +85,11 @@ object LocalLogR {
     // val nSlices = 1
     // val nDocs = args(0).toInt
     // val nFeatures = args(1).toInt
-    val nDocs = 600
-    val nFeatures = 600
+    val nDocs = 2000
+    val nFeatures = 20
     val A = RCV1Data.rcv1IDF(nDocs,2,nFeatures)
-   // println("A")
-   // println(A)
+   println("A")
+   println(A)
     val b = RCV1Data.labels(0,nDocs,2)
     val zippers = A.zip(b)
     learnAndCheck(zippers(0),zippers(1))
