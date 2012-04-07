@@ -19,22 +19,18 @@ object RCV1Data {
       .zipWithIndex
       .toList
       .chunk(docsPerSlice)
-    println("sliceGroups")
-    println(sliceGroups)
-    println("sliceGroups size")
-    println(sliceGroups.size)
-    val slices = sliceGroups.map(slice => {
+    var j = 0
+      val slices = sliceGroups.map(slice => {
       val data = new SparseDoubleMatrix2D(docsPerSlice, nFeatures)
-      var j = 0
+      j += 1
       for ((line, docIndex) <- slice) {
-        j += 1
         for (pair <- line.split(":")) {
           val splits = pair.split(", ")
           val front = splits(0)
           val back = splits(1)
           val feature = front.substring(1, front.length()).toInt
           val weight = back.substring(0, back.length() - 1).toDouble
-          data.setQuick(docIndex - j*docsPerSlice , feature, weight)
+          data.setQuick(docIndex - (j-1)*docsPerSlice , feature, weight)
         }
       }
       data

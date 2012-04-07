@@ -15,7 +15,7 @@ import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleMatrix1D}
 
 object LocalLogR {
   type DataPair = (SparseDoubleMatrix2D, SparseDoubleMatrix1D)
-  val ITERATIONS = 20
+  val ITERATIONS = 100
 
   def solve(sparseData: SparseDoubleMatrix2D, sparseOutput: SparseDoubleMatrix1D): DoubleMatrix1D ={
     val nSamples = sparseData.rows()
@@ -45,14 +45,7 @@ object LocalLogR {
     val wTrain = solve(trainSet._1, trainSet._2)
     //println("wTrain")
     //println(wTrain)
-    val ATest = trainSet._1
-    //println("Atest card")
-    //println(ATest.cardinality())
-    //println("ATest")
-    //println(ATest)
-    val bTrain = trainSet._2
-    //println("bTrain")
-    //println(bTrain)
+    val ATest = testSet._1
     val bTest = testSet._2
     //println("bTest")
     //println(bTest)
@@ -88,8 +81,7 @@ object LocalLogR {
     val nDocs = 2000
     val nFeatures = 20
     val A = RCV1Data.rcv1IDF(nDocs,2,nFeatures)
-   println("A")
-   println(A)
+   // println(A)
     val b = RCV1Data.labels(0,nDocs,2)
     val zippers = A.zip(b)
     learnAndCheck(zippers(0),zippers(1))
