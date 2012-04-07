@@ -44,7 +44,7 @@ object SparseLogisticRegression {
     negb.viewColumn(0).assign(b).assign(DoubleFunctions.neg)
     val C = DoubleFactory2D.sparse.appendColumns(negb, negA)
 
-    def xUpdate() {
+    def xUpdateNewton() {
       def gradient(x: DoubleMatrix1D): DoubleMatrix1D = {
         val expTerm = new DenseDoubleMatrix1D(m)
         C.zMult(x, expTerm, 1.0, 1.0, false)
@@ -113,6 +113,57 @@ object SparseLogisticRegression {
         }
       }
     }
+    def xUpdateGradient() {
+      def gradient(x: DoubleMatrix1D): DoubleMatrix1D = {
+        val expTerm = new DenseDoubleMatrix1D(m)
+        C.zMult(x, expTerm, 1.0, 1.0, false)
+        expTerm.assign(DoubleFunctions.exp)
+        val t1 = expTerm.copy()
+        t1.assign(DoubleFunctions.plus(1.0)).assign(expTerm, DoubleFunctions.div).assign(DoubleFunctions.inv)
+        val t2 = C.zMult(t1, null, 1.0, 1.0, true)
+        val t3 = x.copy()
+        t3.assign(z, DoubleFunctions.minus).assign(u, DoubleFunctions.plus).assign(DoubleFunctions.mult(rho))
+        val grad = t2.copy()
+        grad.assign(t3, DoubleFunctions.plus)
+        grad
+      }
+      def loss(x: DoubleMatrix1D): Double = {
+        val expTerm = new DenseDoubleMatrix1D(m)
+        C.zMult(x, expTerm, 1.0, 1.0, false)
+        expTerm.assign(DoubleFunctions.exp)
+        val t1 = expTerm.copy()
+        t1.assign(DoubleFunctions.plus(1.0)).assign(DoubleFunctions.log)
+        val t2 = x.copy()
+        t2.assign(z, DoubleFunctions.minus).assign(u, DoubleFunctions.plus)
+        val norm = algebra.norm2(t2)
+        norm * norm * rho / 2 + t1.zSum()
+      }
+      def backtrackingLineSearch(x: DoubleMatrix1D, dx: DoubleMatrix1D, alpha: Double, beta: Double): Double = {
+        val fx = loss(x)
+        val gradDot = -1.0*dx.zDotProduct(dx)
+        def helper(t: Double): Double = {
+          def rhs() = gradDot*alpha*t + fx
+          def lhs() = {
+            val temp = x.copy()
+            temp.assign(dx,DoubleFunctions.plusMultSecond(t))
+            loss(temp)
+          }
+          if (rhs() > lhs()) helper(beta*t) else t
+        }
+        helper(1.0)
+      }
+      def descent(x0: DoubleMatrix1D, maxIter: Int) {
+        val alpha = .1
+        val beta = .5
+        for (_ <- 1 to maxIter) {
+          val dx = gradient(x)
+          dx.assign(DoubleFunctions.neg)
+          val t = backtrackingLineSearch(x, dx, alpha, beta)
+          x.assign(dx,DoubleFunctions.multSecond(t))
+        }
+      }
+      descent(x,25)
+    }
     def zUpdate() {
       z.assign(x).assign(u, DoubleFunctions.plus).assign(shrinkage)
     }
@@ -121,7 +172,7 @@ object SparseLogisticRegression {
     }
     for (_ <- 1 to max_iter) {
       println(z.cardinality().toDouble/z.size())
-      xUpdate()
+      xUpdateGradient()
       zUpdate()
       uUpdate()
     }
