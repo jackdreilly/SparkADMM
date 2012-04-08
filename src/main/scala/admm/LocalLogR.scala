@@ -25,7 +25,6 @@ object LocalLogR {
     w.assign(DoubleFunctions.mult(2.0))
       .assign(DoubleFunctions.minus(1.0))
     for (i <- 1 to ITERATIONS) {
-      // println("On iteration " + i)
       val gradient = DoubleFactory1D.sparse.make(nFeatures,0.0)
       for (j <- 0 until nSamples) {
         val b = sparseOutput.getQuick(j)
@@ -43,33 +42,13 @@ object LocalLogR {
 
   def learnAndCheck(trainSet: DataPair, testSet: DataPair) {
     val wTrain = solve(trainSet._1, trainSet._2)
-    //println("wTrain")
-    //println(wTrain)
     val ATest = testSet._1
     val bTest = testSet._2
-    //println("bTest")
-    //println(bTest)
-    //println("bTest card")
-    //println(bTest.cardinality())
     val bEst = ATest.zMult(wTrain,null,1.0,1.0,false)
-    //println("bEst")
-    //println(bEst)
     bEst.assign(DoubleFunctions.sign)
-    //println("bEst sign")
-    //println(bEst)
-    //println("bEst card")
-    //println(bEst.cardinality())
-    //println("bTest")
-    //println(bTest)
     bTest.assign(DoubleFunctions.mult(2.0))
-    //println("2*bTest")
-    //println(bTest)
     bTest.assign(DoubleFunctions.minus(1.0))
-    //println("2*bTest-1")
-    //println(bTest)
     bTest.assign(bEst,DoubleFunctions.minus)
-    //println("bTest - bEst")
-    //println(bTest)
     println("result")
     println(1.0*bTest.cardinality()/bTest.size())
   }
