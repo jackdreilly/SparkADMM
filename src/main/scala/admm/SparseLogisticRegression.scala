@@ -13,9 +13,13 @@ import cern.jet.math.tdouble.DoubleFunctions
 import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleMatrix2D, DoubleFactory2D, DoubleMatrix1D}
 import scala.util.control.Breaks._
 import cern.colt.function.tdouble.DoubleFunction
-import data.RCV1Data.{labels, rcv1IDF}
+import data.RCV1Data.{labels, rcv1IDF, SampleSet, OutputSet}
 import scalala.library.Plotting.plot
 import scalala.library.Library.linspace
+import data.{SlicedDataSet, DataSet}
+import admmutils.ADMMFunctions
+import data.RCV1Data.getDataset
+
 
 object SparseLogisticRegression {
   var lambda = .3
@@ -191,3 +195,6 @@ object SparseLogisticRegression {
     println(xEstimated)
   }
 }
+
+
+

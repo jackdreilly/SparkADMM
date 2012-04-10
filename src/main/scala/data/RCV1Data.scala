@@ -11,7 +11,10 @@ import cern.colt.matrix.tdouble.impl.{SparseDoubleMatrix2D, SparseDoubleMatrix1D
 import admmutils.ListHelper.list2helper
 
 object RCV1Data {
-  def rcv1IDF(nDocs: Int = 23149, nSlices: Int = 1, nFeatures: Int = 47236): List[SparseDoubleMatrix2D] = {
+  type SampleSet = SparseDoubleMatrix2D
+  type OutputSet = SparseDoubleMatrix1D
+
+  def rcv1IDF(nDocs: Int = 23149, nSlices: Int = 1, nFeatures: Int = 47236): List[SampleSet] = {
     val docsPerSlice = nDocs / nSlices
     val sliceGroups = Source.fromFile("etc/data/word_counts.admm.data")
       .getLines
@@ -38,7 +41,7 @@ object RCV1Data {
     slices
   }
 
-  def labels(index: Int = 0, nDocs: Int = 23149, nSlices: Int = 1): List[SparseDoubleMatrix1D] = {
+  def labels(index: Int = 0, nDocs: Int = 23149, nSlices: Int = 1): List[OutputSet] = {
     val s = Source.fromFile("etc/data/topic_hits_transpose.admm.data")
     val docsPerSlice = nDocs / nSlices
     s.getLines
@@ -60,12 +63,22 @@ object RCV1Data {
     })
   }
 
+  def getDataset(nDocs: Int, nFeatures: Int, topicIndex: Int, nSlices: Int): DataSet[SampleSet,OutputSet] = {
+    nSlices match {
+      case _ => SlicedDataSet(
+        rcv1IDF(nDocs,nSlices,nFeatures)
+          .zip(labels(topicIndex,nDocs,nSlices))
+          .map{case (d,o) => SingleSet(d,o)})
+    }
+  }
+
   def main(args: Array[String]) {
     val nSlices = 1000
     val nDocs = 10000
     val nFeatures = 5000
-    val data = rcv1IDF(nDocs, nSlices, nFeatures).toList
-    val labs = labels(0, nDocs, nSlices)
+    val topicIndex = 0;
+    val data = getDataset(400,200,0,1)
+    println(data)
   }
 
 
