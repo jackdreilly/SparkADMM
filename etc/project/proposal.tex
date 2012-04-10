@@ -1,4 +1,4 @@
-\documentclass{article}
+\itshape\documentclass{article}
 
 \usepackage[latin1]{inputenc}    
 \usepackage[T1]{fontenc}
@@ -41,21 +41,32 @@
 
 \section{Different software frameworks}
  \label{Different software frameworks}
+ 
+\subsection{Map-Reduce architecture}
+	\label{Map-Reduce architecture} 
+	
+	MapReduce is a framework for processing highly distributable problems across huge datasets using a large number of computers, collectively referred to as a cluster. In this framework two main steps appear:
 
-\subsection{Apache Hadoop}
-	\label{Apache Hadoop}
+\begin{itemize}
+\item ``Map'' step: the master computer divides in several sub-problems and send them to the other computers in the cluster. Once these worker computers have solved the sub-problem, they send back the solution to the master computer.
+
+\item ``Reduce'' step: the master computer collects the results of all the sub-problems and combines them in a specific way to obtain a solution to the original main problem.
+
+\end{itemize}
+
+Provided each mapping operation is independent of the others, all maps can be performed in parallel. 	
+
+
+\subsection{Hadoop}
+	\label{Hadoop}
 	
-	lrjfzjiozjf
-	
-\subsection{Mesos}
-	\label{Mesos}
-	
-	lshfcizufhoizauh	
+	Hadoop is a free Java framework that supports distributed applications.  It enables applications to work with thousands of computational independent computers and petabytes of data. A complete MapReduce algorithm can be used in this framework.
 	
 \subsection{Spark}
 	\label{Spark}
-	
-	zdfjzpofjz
+
+	Spark is a cluster computing framework built on top of Mesos. As well as Hadoop, it supports distributed applications. The language used is Scala. 
+	Spark's programming model is based on two constructs: parallel loops over ``distributed datasets'', and a limited set of types of shared variables that can be accessed from tasks running on different machines. This is the main advantage compared to Hadoop and the reason why we want to use this framework. Thanks to this architecture, we will be able to compute big calculations only once, and then the results will be shared with all the relevant computers. 
 
 
 \section{Alternating Direction Method of Multipliers (ADMM)}
