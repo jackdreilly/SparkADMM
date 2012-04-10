@@ -1,0 +1,82 @@
+%% LyX 2.0.2 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{amsmath}
+\usepackage{babel}
+\begin{document}
+
+\section{Project Proposal}
+
+Partners: Boris Prodhomme, Johann Grauzam
+
+We propose to use the distributed ADMM algorithm on the Spark framework.
+The end goal will be to compare the running time of the algorithm
+on both the Spark framework and the traditional Hadoop framework to
+see the benefits of using in-memory cluster computing techniques.
+
+The ADMM algorithm is described extensively in \cite{Boyd2011} as
+a method for distributed optimization. The distributed aspect of computation
+comes from the separability of the subproblems expressed in the ADMM
+algorithm. More specifically, for problems such as lasso, support
+vector machines, and logistic regression, the ADMM can lead directly
+to a collaborative filtering formulation. For the sparse logistic
+regression problem, $\underset{x}{\min}\ell\left(Ax-b\right)+\lambda\left\Vert x\right\Vert _{1}$
+with logistic loss function $\ell\left(x\right)=\log\left(1+\exp\left(-x\right)\right)$,
+the $A$ and $b$ can be split across examples to give the parallelized
+version of the algorithm:
+
+\begin{eqnarray*}
+x_{i}^{k+1} & = & \arg\min_{x}\left(\ell_{i}(A_{i}x\right)+\frac{\rho}{2}\left\Vert x-z^{k}+u_{i}^{k}\right\Vert _{2}^{2}\\
+z^{k} & = & S_{\lambda/\rho N}\left(\bar{x}^{k+1}+\bar{u}^{k}\right)\\
+u_{i}^{k+1} & = & u_{i}^{k}+x_{i}^{k+1}-z^{k+1}
+\end{eqnarray*}
+
+
+where all $x_{i}$ and $u_{i}$ can be updated in parallel.
+
+This algorithm lends itself particularly well to the map-reduce framework
+for parallel computing \cite{Dean2008}, except for one particular
+downside. Map-reduce is typically involves a single map-reduce process,
+which means that state need not be persistent over map jobs, since
+they are one-off jobs. In ADMM, however, this is not the case as this
+is an iterative algorithm where the $A_{i},b_{i}$ data are needed
+for each iteration of $x_{i},u_{i}$. Loading the data for each successive
+iteration of the algorithm can be expensive, in particular in distributed
+systems, where network communication is the bottleneck.
+
+The Spark framework was created with these types of tasks in mind.
+The framework allows one to \emph{cache} variables across map iterations,
+enabling persistence of states of calculation. We seek to quantify
+the benefits of such persistence over the standard Hadoop-style map-reduce.
+
+We believe the combination of ADMM parallelization of convex optimization
+problems and the in-memory distributed programming model of Spark
+has the potential to be a game-changer for huge-scale model-learning
+problems. As a proof of concept, we hope to apply this particular
+strategy to the Reuters Corpus Volume 1 data set (RCV1) \cite{Lewis2004}.
+The dataset consists of over 800,000 documents with manually added
+topic tags. The problem we wish to apply is sparse logistic regression
+in order understand which keywords are relevant to certain topics.
+Such problems are very difficult to solve using standard convex optimization
+algorithms given the size of the dataset (250 GB, 800,000 samples,
+50,000 features). We wish to show the performance of our system with
+that of previous attempts of \cite{Lewis2004} and standard Hadoop-style
+map-reduce \cite{Dean2008}.
+
+Large design and algorithmic problems currently still exist for our
+problem. Which unconstrained algorithm should be applied to the $x_{i}$
+subproblems? How should the data be sharded across the network? How
+should a distributed file system be used to quickly load the entire
+dataset? What is the optimal manner in which to partition the data?
+Can we apply preprocessing of the data via the SAFE method to shrink
+the dataset \cite{Ghaoui2010}? Given the large degree of sparsity
+of the $A$ matrix, will block partitioning schemes be possible? We
+hope to explore these questions and provide answers that enable faster
+computation of the optimization problem.
+
+\bibliographystyle{plain}
+\bibliography{jdrbib}
+
+\end{document}

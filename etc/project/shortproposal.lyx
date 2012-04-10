@@ -1,0 +1,249 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Section
+Project Proposal
+\end_layout
+
+\begin_layout Standard
+Partners: Boris Prodhomme, Johann Grauzam
+\end_layout
+
+\begin_layout Standard
+We propose to use the distributed ADMM algorithm on the Spark framework.
+ The end goal will be to compare the running time of the algorithm on both
+ the Spark framework and the traditional Hadoop framework to see the benefits
+ of using in-memory cluster computing techniques.
+\end_layout
+
+\begin_layout Standard
+The ADMM algorithm is described extensively in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Boyd2011"
+
+\end_inset
+
+ as a method for distributed optimization.
+ The distributed aspect of computation comes from the separability of the
+ subproblems expressed in the ADMM algorithm.
+ More specifically, for problems such as lasso, support vector machines,
+ and logistic regression, the ADMM can lead directly to a collaborative
+ filtering formulation.
+ For the sparse logistic regression problem, 
+\begin_inset Formula $\underset{x}{\min}\ell\left(Ax-b\right)+\lambda\left\Vert x\right\Vert _{1}$
+\end_inset
+
+ with logistic loss function 
+\begin_inset Formula $\ell\left(x\right)=\log\left(1+\exp\left(-x\right)\right)$
+\end_inset
+
+, the 
+\begin_inset Formula $A$
+\end_inset
+
+ and 
+\begin_inset Formula $b$
+\end_inset
+
+ can be split across examples to give the parallelized version of the algorithm:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+x_{i}^{k+1} & = & \arg\min_{x}\left(\ell_{i}(A_{i}x\right)+\frac{\rho}{2}\left\Vert x-z^{k}+u_{i}^{k}\right\Vert _{2}^{2}\\
+z^{k} & = & S_{\lambda/\rho N}\left(\bar{x}^{k+1}+\bar{u}^{k}\right)\\
+u_{i}^{k+1} & = & u_{i}^{k}+x_{i}^{k+1}-z^{k+1}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where all 
+\begin_inset Formula $x_{i}$
+\end_inset
+
+ and 
+\begin_inset Formula $u_{i}$
+\end_inset
+
+ can be updated in parallel.
+\end_layout
+
+\begin_layout Standard
+This algorithm lends itself particularly well to the map-reduce framework
+ for parallel computing 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Dean2008"
+
+\end_inset
+
+, except for one particular downside.
+ Map-reduce is typically involves a single map-reduce process, which means
+ that state need not be persistent over map jobs, since they are one-off
+ jobs.
+ In ADMM, however, this is not the case as this is an iterative algorithm
+ where the 
+\begin_inset Formula $A_{i},b_{i}$
+\end_inset
+
+ data are needed for each iteration of 
+\begin_inset Formula $x_{i},u_{i}$
+\end_inset
+
+.
+ Loading the data for each successive iteration of the algorithm can be
+ expensive, in particular in distributed systems, where network communication
+ is the bottleneck.
+\end_layout
+
+\begin_layout Standard
+The Spark framework was created with these types of tasks in mind.
+ The framework allows one to 
+\emph on
+cache
+\emph default
+ variables across map iterations, enabling persistence of states of calculation.
+ We seek to quantify the benefits of such persistence over the standard
+ Hadoop-style map-reduce.
+\end_layout
+
+\begin_layout Standard
+We believe the combination of ADMM parallelization of convex optimization
+ problems and the in-memory distributed programming model of Spark has the
+ potential to be a game-changer for huge-scale model-learning problems.
+ As a proof of concept, we hope to apply this particular strategy to the
+ Reuters Corpus Volume 1 data set (RCV1) 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Lewis2004"
+
+\end_inset
+
+.
+ The dataset consists of over 800,000 documents with manually added topic
+ tags.
+ The problem we wish to apply is sparse logistic regression in order understand
+ which keywords are relevant to certain topics.
+ Such problems are very difficult to solve using standard convex optimization
+ algorithms given the size of the dataset (250 GB, 800,000 samples, 50,000
+ features).
+ We wish to show the performance of our system with that of previous attempts
+ of 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Lewis2004"
+
+\end_inset
+
+ and standard Hadoop-style map-reduce 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Dean2008"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Large design and algorithmic problems currently still exist for our problem.
+ Which unconstrained algorithm should be applied to the 
+\begin_inset Formula $x_{i}$
+\end_inset
+
+ subproblems? How should the data be sharded across the network? How should
+ a distributed file system be used to quickly load the entire dataset? What
+ is the optimal manner in which to partition the data? Can we apply preprocessin
+g of the data via the SAFE method to shrink the dataset 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "Ghaoui2010"
+
+\end_inset
+
+? Given the large degree of sparsity of the 
+\begin_inset Formula $A$
+\end_inset
+
+ matrix, will block partitioning schemes be possible? We hope to explore
+ these questions and provide answers that enable faster computation of the
+ optimization problem.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "jdrbib"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

@@ -69,7 +69,8 @@ Collaborative Filtering via ADMM
 \end_layout
 
 \begin_layout Standard
-The alternating direction method of multipliers algorithm described in 
+The alternating direction method of multipliers algorithm (ADMM) described
+ in 
 \begin_inset CommandInset citation
 LatexCommand cite
 key "Boyd2011"
@@ -100,6 +101,13 @@ if the
 
  matrix is skinny, then a typical convex algorithm would have complexity
  on the order of the number of samples.
+ ADMM allows the above problem to be split into many separable problems
+ by slicing the 
+\begin_inset Formula $A,b$
+\end_inset
+
+ matrices horizontally into chunks and solved via the following three step
+ iterative algorithm:
 \end_layout
 
 \begin_layout Standard
