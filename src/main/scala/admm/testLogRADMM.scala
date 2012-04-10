@@ -19,8 +19,8 @@ import list.tint.IntArrayList
 
 object testLogRADMM {
   def main(args: Array[String]) {
-    val nDocs = 20
-    val nFeatures = 10
+    val nDocs = 200
+    val nFeatures = 50
 
     // Calculation of bTrue
 
@@ -107,6 +107,8 @@ object testLogRADMM {
 
     mu  *= 0.1
     mu  /= nDocs
+    
+    println(bTrue)
   }
 
 }
