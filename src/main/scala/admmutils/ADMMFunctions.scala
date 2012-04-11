@@ -1,9 +1,10 @@
 package admmutils
 
 import cern.colt.function.tdouble.DoubleFunction
-import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleMatrix1D}
 import cern.jet.math.tdouble.DoubleFunctions
-import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix1D
+import util.Random
+import cern.colt.matrix.tdouble.impl.{SparseDoubleMatrix2D, SparseDoubleMatrix1D, DenseDoubleMatrix1D}
+import cern.colt.matrix.tdouble.{DoubleMatrix2D, DoubleFactory2D, DoubleFactory1D, DoubleMatrix1D}
 
 /**
  * User: jdr
@@ -24,6 +25,24 @@ object ADMMFunctions {
     out.assign(DoubleFunctions.div(vecs.size.toDouble))
     out
   }
+  def sprandnvec(n: Int, sparsity: Double): DoubleMatrix1D = {
+    def sample: Boolean = Random.nextDouble() < sparsity
+    val out = DoubleFactory1D.sparse.make(n)
+    val indices = (1 to n).filter{_ => sample}
+    indices.foreach{out.setQuick(_,Random.nextGaussian())}
+    out
+  }
+  def sprandnMatrix(m: Int, n: Int, sparsity: Double): DoubleMatrix2D = {
+    def sample: Boolean = Random.nextDouble() < sparsity
+    val out = DoubleFactory2D.sparse.make(m,n)
+    for (i <- 0 until m) {
+      for (j <- 0 until n) {
+        if (sample) out.setQuick(i,j,Random.nextGaussian())
+      }
+    }
+    out
+  }
+
 
   def main(args: Array[String]) {
     val x = DoubleFactory1D.dense.random(10)

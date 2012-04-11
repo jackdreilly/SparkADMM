@@ -191,8 +191,8 @@ object SparseLogisticRegression {
     SparseLogisticRegression.rho = args(3).toDouble
     val A = rcv1IDF(nDocs, nSlices, nFeatures).head
     val b = labels(0, nDocs, nSlices).head
-    val xEstimated = SparseLogisticRegression.solve(A, b)
-    println(xEstimated)
+    //val xEstimated = SparseLogisticRegression.solve(A, b)
+    //println(xEstimated)
   }
 }
 

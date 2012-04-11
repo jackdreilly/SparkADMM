@@ -63,7 +63,7 @@ object LocalLogR {
    // println(A)
     val b = RCV1Data.labels(0,nDocs,2)
     val zippers = A.zip(b)
-    learnAndCheck(zippers(0),zippers(1))
+    //learnAndCheck(zippers(0),zippers(1))
   }
 
 }

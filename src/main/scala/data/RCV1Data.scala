@@ -9,10 +9,11 @@ package data
 import scala.io._
 import cern.colt.matrix.tdouble.impl.{SparseDoubleMatrix2D, SparseDoubleMatrix1D}
 import admmutils.ListHelper.list2helper
+import cern.colt.matrix.tdouble.{DoubleMatrix1D, DoubleMatrix2D}
 
 object RCV1Data {
-  type SampleSet = SparseDoubleMatrix2D
-  type OutputSet = SparseDoubleMatrix1D
+  type SampleSet = DoubleMatrix2D
+  type OutputSet = DoubleMatrix1D
 
   def rcv1IDF(nDocs: Int = 23149, nSlices: Int = 1, nFeatures: Int = 47236): List[SampleSet] = {
     val docsPerSlice = nDocs / nSlices
@@ -65,6 +66,10 @@ object RCV1Data {
 
   def getDataset(nDocs: Int, nFeatures: Int, topicIndex: Int, nSlices: Int): DataSet[SampleSet,OutputSet] = {
     nSlices match {
+      case 1 => SingleSet(
+      rcv1IDF(nDocs,1,nFeatures).head,
+      labels(topicIndex,nDocs,1).head
+    )
       case _ => SlicedDataSet(
         rcv1IDF(nDocs,nSlices,nFeatures)
           .zip(labels(topicIndex,nDocs,nSlices))
