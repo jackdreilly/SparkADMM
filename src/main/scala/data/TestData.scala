@@ -5,6 +5,7 @@ import admmutils.ADMMFunctions
 import util.Random
 import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleMatrix1D, DoubleMatrix2D, DoubleFactory2D}
 import admm.SLRDistributed
+import data.SingleSet
 
 /**
  * User: jdr
@@ -34,10 +35,20 @@ object TestData {
     out
   }
   def main(args: Array[String]) {
-    val data = slrData(50,200,.1)
-    val noisySamples = data.noise.samples.asInstanceOf[RCV1Data.SampleSet]
-    val noisyOutput = data.noise.output.asInstanceOf[RCV1Data.OutputSet]
-    SLRDistributed.solve(SingleSet(noisySamples,noisyOutput))
+    //val data = slrData(50,200,.1)
+    val A: RCV1Data.SampleSet = DoubleFactory2D.sparse.make(4,2)
+    val b: RCV1Data.OutputSet  = DoubleFactory1D.dense.make(4)
+    A.set(1,0,.0751)
+    A.set(3,0,.6965)
+    A.set(2,1,.3516)
+    b.setQuick(0,1)
+    b.setQuick(1,1)
+    b.setQuick(2,1)
+    b.setQuick(3,0)
+    val data = SingleSet(A,b)
+    SLRDistributed.lambda = .03
+    val x = SLRDistributed.solve(data)
+    println(x)
 
   }
 }

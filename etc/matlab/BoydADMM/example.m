@@ -46,3 +46,12 @@ subplot(2,1,2);
 semilogy(1:K, max(1e-8, history.s_norm), 'k', ...
     1:K, history.eps_dual, 'k--', 'LineWidth', 2);   
 ylabel('||s||_2'); xlabel('iter (k)'); 
+
+
+
+vest = x(1);
+xest = x(2:end);
+
+invar = -b.*(A*xest - vest);
+
+length(find(invar > 0))/length(invar)

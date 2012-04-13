@@ -183,7 +183,9 @@ object SLRDistributed {
         }.flatten
       }
     }
-    val v = -.5*(goodslices.reduce{_+_}/goodslices.size + badSlices.reduce{_+_}/badSlices.size)
+    //val v = -.5*(goodslices.reduce{_+_}/goodslices.size + badSlices.reduce{_+_}/badSlices.size)
+    val v = xEst.getQuick(0)
+
     data match {
       case SlicedDataSet(slices) => {
         var onegood = 0
@@ -195,12 +197,13 @@ object SLRDistributed {
           val b = slice.output
 
           (0 until A.rows()).map{A.viewRow(_)}.zip(b.toArray).foreach{case (ai,bi) =>{
-            val mu = v + ai.zDotProduct(x)
+            val biprime = bi*2 - 1
+            val mu = ai.zDotProduct(x) - v
             bi match {
               case 0 => {zerototal+=1}
               case 1 => {onetotal+=1}
             }
-            math.signum(mu) == math.signum(bi*2 - 1) match {
+            -mu*biprime > 0 match {
               case true => {
                 bi match {
                   case 0 => {zerogood+=1}
@@ -215,6 +218,7 @@ object SLRDistributed {
         }
         println("positive success: " + (onegood.toDouble/onetotal).toString)
         println("negative success: " + (zerogood.toDouble/zerototal).toString)
+        println(v)
       }
     }
   }
