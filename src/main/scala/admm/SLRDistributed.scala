@@ -19,12 +19,15 @@ object SLRDistributed {
   var counter = 0
   type Vector = DoubleMatrix1D
   val algebra = new DenseDoubleAlgebra()
+  val alpha = 1000.0
   case class MapEnvironment(A: SampleSet, b: OutputSet, x: Vector, u: Vector, z: Vector ) {
     counter+=1
     println("create slice " + counter.toString)
     val bPrime = b.copy()
-    bPrime.assign(DoubleFunctions.mult(2.0)).assign(DoubleFunctions.minus(1.0))
-    val C = DoubleFactory2D.sparse.appendColumns(bPrime.reshape(bPrime.size().toInt,1),A)
+    bPrime.assign(DoubleFunctions.mult(2.0)).assign(DoubleFunctions.minus(1.0)).assign(DoubleFunctions.mult(alpha))
+    val Aprime = DoubleFactory2D.sparse.diagonal(bPrime).zMult(A,null)
+    val C = DoubleFactory2D.sparse.appendColumns(bPrime.reshape(bPrime.size().toInt,1),Aprime)
+    //val C = DoubleFactory2D.sparse.appendColumns(bPrime.reshape(bPrime.size().toInt,1),A)
     C.assign(DoubleFunctions.neg)
     val m = A.rows()
     val n = A.columns()
@@ -183,8 +186,29 @@ object SLRDistributed {
         }.flatten
       }
     }
-    //val v = -.5*(goodslices.reduce{_+_}/goodslices.size + badSlices.reduce{_+_}/badSlices.size)
-    val v = xEst.getQuick(0)
+    val vwish = -.5*(goodslices.reduce{_+_}/goodslices.size + badSlices.reduce{_+_}/badSlices.size)
+    val vreal = xEst.getQuick(0)
+    val vs = List(vreal,vwish)
+    vs.map{v =>{
+      def loss(mu: Double): Double = math.log(1 + math.exp(-mu))
+      def mu(ai: DoubleMatrix1D, bi: Double): Double = (2*bi - 1)*(ai.zDotProduct(x) + v)
+      val totalLoss = data match {
+        case SlicedDataSet(slices) => {
+          slices.map{
+            case SingleSet(as,bs) => {
+              as.toArray.zip(bs.toArray).map{case (ai,bi) =>{
+                loss(mu(DoubleFactory1D.dense.make(ai),bi))
+              }}
+            }
+          }.flatten.reduce{_+_}
+        }
+      }
+      println(totalLoss)
+    }}
+    val goodavg = goodslices.reduce{_+_}/goodslices.size
+    val badavg = badSlices.reduce{_+_}/badSlices.size
+    val v = vreal
+
 
     data match {
       case SlicedDataSet(slices) => {
@@ -198,12 +222,12 @@ object SLRDistributed {
 
           (0 until A.rows()).map{A.viewRow(_)}.zip(b.toArray).foreach{case (ai,bi) =>{
             val biprime = bi*2 - 1
-            val mu = ai.zDotProduct(x) - v
+            val mu = biprime*(x.zDotProduct(ai) + v)
             bi match {
               case 0 => {zerototal+=1}
               case 1 => {onetotal+=1}
             }
-            -mu*biprime > 0 match {
+            mu > 0 match {
               case true => {
                 bi match {
                   case 0 => {zerogood+=1}
@@ -219,6 +243,11 @@ object SLRDistributed {
         println("positive success: " + (onegood.toDouble/onetotal).toString)
         println("negative success: " + (zerogood.toDouble/zerototal).toString)
         println(v)
+        println(goodavg )
+        println(badavg)
+        println(goodslices.map{a => math.pow(a-goodavg,2)}.reduce{_+_}/goodslices.size)
+        println(badSlices.map{a => math.pow(a-badavg,2)}.reduce{_+_}/badSlices.size)
+        println(goodslices.size.toDouble/(goodslices.size + badSlices.size))
       }
     }
   }
