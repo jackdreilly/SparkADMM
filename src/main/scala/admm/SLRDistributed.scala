@@ -4,10 +4,9 @@ import admmutils.ADMMFunctions
 import cern.jet.math.tdouble.DoubleFunctions
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra
 import cern.colt.matrix.tdouble.{DoubleFactory2D, DoubleMatrix1D, DoubleFactory1D}
-import data.RCV1Data.{SampleSet, OutputSet, getDataset}
 import scala.util.control.Breaks._
 import data.{SingleSet, SlicedDataSet, DataSet}
-
+import data.ReutersData.{OutputSet, SampleSet, getBalancedSet, TopicId}
 /**
  * User: jdr
  * Date: 4/9/12
@@ -19,7 +18,7 @@ object SLRDistributed {
   var counter = 0
   type Vector = DoubleMatrix1D
   val algebra = new DenseDoubleAlgebra()
-  val alpha = 1000.0
+  val alpha = 3.0
   case class MapEnvironment(A: SampleSet, b: OutputSet, x: Vector, u: Vector, z: Vector ) {
     counter+=1
     println("create slice " + counter.toString)
@@ -27,7 +26,6 @@ object SLRDistributed {
     bPrime.assign(DoubleFunctions.mult(2.0)).assign(DoubleFunctions.minus(1.0)).assign(DoubleFunctions.mult(alpha))
     val Aprime = DoubleFactory2D.sparse.diagonal(bPrime).zMult(A,null)
     val C = DoubleFactory2D.sparse.appendColumns(bPrime.reshape(bPrime.size().toInt,1),Aprime)
-    //val C = DoubleFactory2D.sparse.appendColumns(bPrime.reshape(bPrime.size().toInt,1),A)
     C.assign(DoubleFunctions.neg)
     val m = A.rows()
     val n = A.columns()
@@ -156,15 +154,16 @@ object SLRDistributed {
   def main(args: Array[String]) {
     val nDocs = args(0).toInt
     val nFeatures = args(1).toInt
-    val docIndex = args(2).toInt
+    val docIndex: TopicId = args(2).toInt
     val nSlices = args(3).toInt
+    val proportion = .5
     lambda = args(4).toDouble
     rho = args(5).toDouble
     maxIter = args(6).toInt
-    val data = getDataset(nDocs,nFeatures,docIndex,nSlices)
-    val xEst = solve(data)
+    val slicedSet = getBalancedSet(nDocs, nFeatures, docIndex, nSlices, proportion)
+    val xEst = solve(slicedSet)
     val x = xEst.viewPart(1,nFeatures)
-    val goodslices = data match {
+    val goodslices = slicedSet match {
       case SlicedDataSet(slices) => {
         slices.map{
           case SingleSet(a,b) => {
@@ -175,7 +174,8 @@ object SLRDistributed {
         }.flatten
       }
     }
-    val badSlices = data match {
+    println("got good")
+    val badSlices = slicedSet match {
       case SlicedDataSet(slices) => {
         slices.map{
           case SingleSet(a,b) => {
@@ -186,13 +186,16 @@ object SLRDistributed {
         }.flatten
       }
     }
+    println("got good")
     val vwish = -.5*(goodslices.reduce{_+_}/goodslices.size + badSlices.reduce{_+_}/badSlices.size)
     val vreal = xEst.getQuick(0)
     val vs = List(vreal,vwish)
+    println("got good")
     vs.map{v =>{
+      println("got good vs")
       def loss(mu: Double): Double = math.log(1 + math.exp(-mu))
       def mu(ai: DoubleMatrix1D, bi: Double): Double = (2*bi - 1)*(ai.zDotProduct(x) + v)
-      val totalLoss = data match {
+      val totalLoss = slicedSet match {
         case SlicedDataSet(slices) => {
           slices.map{
             case SingleSet(as,bs) => {
@@ -210,7 +213,7 @@ object SLRDistributed {
     val v = vreal
 
 
-    data match {
+    slicedSet match {
       case SlicedDataSet(slices) => {
         var onegood = 0
         var onetotal = 0
