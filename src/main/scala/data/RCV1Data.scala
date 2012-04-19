@@ -77,6 +77,20 @@ object RCV1Data {
     }
   }
 
+  def getDatasetList(nDocs: Int, nFeatures: Int, topicIndex: Int, nSlices: Int): List[(SampleSet,OutputSet)] = {
+    nSlices match {
+      case 1 => List( (
+        rcv1IDF(nDocs,1,nFeatures).head,
+        labels(topicIndex,nDocs,1).head )
+      )
+      case _ =>
+        rcv1IDF(nDocs,nSlices,nFeatures)
+          .zip(labels(topicIndex,nDocs,nSlices))
+          .map{case (d,o) => (d,o)}
+    }
+  }
+
+
   def main(args: Array[String]) {
     val nSlices = 1000
     val nDocs = 10000

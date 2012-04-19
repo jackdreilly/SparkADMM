@@ -5,6 +5,9 @@ import cern.jet.math.tdouble.DoubleFunctions
 import util.Random
 import cern.colt.matrix.tdouble.impl.{SparseDoubleMatrix2D, SparseDoubleMatrix1D, DenseDoubleMatrix1D}
 import cern.colt.matrix.tdouble.{DoubleMatrix2D, DoubleFactory2D, DoubleFactory1D, DoubleMatrix1D}
+import data.RCV1Data._
+import collection.immutable.List
+import data.{SlicedDataSet, RCV1Data, SingleSet, DataSet}
 
 /**
  * User: jdr

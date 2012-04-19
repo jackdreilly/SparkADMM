@@ -31,6 +31,7 @@ object SLRDistributed {
     C.assign(DoubleFunctions.neg)
     val m = A.rows()
     val n = A.columns()
+
     def loss(x: Vector): Double = {
       val expTerm = C.zMult(x,null)
       expTerm.assign(DoubleFunctions.exp)
