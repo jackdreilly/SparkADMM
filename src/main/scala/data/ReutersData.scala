@@ -7,15 +7,12 @@ package data
  */
 
 import scala.io._
-import cern.colt.matrix.tdouble.impl.{SparseDoubleMatrix2D, SparseDoubleMatrix1D}
 import admmutils.ListHelper.list2helper
 import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleFactory2D, DoubleMatrix1D, DoubleMatrix2D}
 import org.apache.hadoop.fs.Path
 import spark.{HadoopRDD, SparkContext, RDD}
 import org.apache.hadoop.mapred.{TextInputFormat, FileInputFormat, JobConf}
 import org.apache.hadoop.io.{Text, LongWritable}
-import com.sun.corba.se.spi.protocol.RequestDispatcherDefault
-import data.ReutersData._
 
 object ReutersData {
 
