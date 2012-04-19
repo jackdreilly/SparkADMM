@@ -74,23 +74,4 @@ object Testing extends App {
   }
   }
 
-  def test2 = {
-    val inFile = new Path("/user/hduser/data")
-    val sc = new SparkContext("local","test")
-    val inputFormat: InputFormat[LongWritable, Text] = new TextInputFormat()
-    val jobConf = new JobConf()
-    jobConf.addResource(new Path("/usr/local/share/hadoop/conf/core-site.xml"))
-    jobConf.addResource(new Path("/usr/local/share/hadoop/conf/hdfs-site.xml"))
-    val keyClass = new LongWritable().getClass.asInstanceOf[Class[LongWritable]]
-    val valueClass = new Text().getClass.asInstanceOf[Class[Text]]
-    val inputClass = inputFormat.getClass.asInstanceOf[Class[InputFormat[LongWritable,Text]]]
-    FileInputFormat.setInputPaths(jobConf, inFile)
-    val rdd = new HadoopRDD[LongWritable,Text](sc,jobConf,inputClass,keyClass,valueClass,100)
-    val nSplits = 100
-    val sizeSplits = 100
-    val strings = rdd.map{_._2.toString}.filter(line => line.split(" ", 2).head.toInt < nSplits*sizeSplits)
-    val groups = strings.groupBy(line => line.split(" ").head.toInt % nSplits).map{pair => new ReutersSet(pair._2.map{line => new ReutersRecord(line.split(" ",2).last)},0)}
-  }
-
-  test2
 }
