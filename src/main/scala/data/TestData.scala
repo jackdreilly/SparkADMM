@@ -35,20 +35,7 @@ object TestData {
     out
   }
   def main(args: Array[String]) {
-    //val data = slrData(50,200,.1)
-    val A: RCV1Data.SampleSet = DoubleFactory2D.sparse.make(4,2)
-    val b: RCV1Data.OutputSet  = DoubleFactory1D.dense.make(4)
-    A.set(1,0,.0751)
-    A.set(3,0,.6965)
-    A.set(2,1,.3516)
-    b.setQuick(0,1)
-    b.setQuick(1,1)
-    b.setQuick(2,1)
-    b.setQuick(3,0)
-    val data = SingleSet(A,b)
-    SLRDistributed.lambda = .03
-    val x = SLRDistributed.solve(data)
-    println(x)
+
 
   }
 }
