@@ -1,16 +1,14 @@
 package admm
 
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra
-import data.RCV1Data._
+
 import cern.jet.math.tdouble.DoubleFunctions
 import util.control.Breaks._
-import data.SlicedDataSet._
-import data.SingleSet._
 import data.{SlicedDataSet, SingleSet, DataSet}
 import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleFactory2D, DoubleMatrix1D}
-import admmutils.ADMMFunctions
 import spark.SparkContext
 import SparkContext._
+import data.ReutersData._
 
 
 /**
@@ -29,12 +27,10 @@ object SLRDistributedSpark {
   val algebra = new DenseDoubleAlgebra()
   val alpha = 1000.0
 
-  /*counter+=1
-  println("create slice " + counter.toString)*/
 
-  def xUpdate(A: SampleSet, b: OutputSet, x: Vector, u: Vector): (SampleSet, OutputSet, Vector, Vector) = {
+  def xUpdate(A: SampleSet, b: OutputSet, x: Vector, u: Vector):  Vector = {
 
-    val z = spark.broadcast.Broadcast.broadcastZ.Value
+    val z = broadcastZ.Value
 
     val bPrime = b.copy()
     bPrime.assign(DoubleFunctions.mult(2.0)).assign(DoubleFunctions.minus(1.0)).assign(DoubleFunctions.mult(alpha))
@@ -117,98 +113,12 @@ object SLRDistributedSpark {
     x.assign(descent(x, 25))
   }
 
-
   var maxIter = 100
   var rho = 1.0
   var lambda = 2.0
 
-  /*def solve(dataList : List[(SampleSet,OutputSet)]): DoubleMatrix1D = {
-    
-        val nDocsPerSlice = dataList.head._1.rows()
-        val nFeatures = dataList.head._1.columns()
-        val nSlices = dataList.size
-        val z: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-        val environments = dataList.map{  slice =>
-          val x: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-          val u: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-          MapEnvironment(slice._1, slice._2, x,u,z)
-        }
-        val xs = environments.map{_.x}
-        val us = environments.map{_.u}
-        val zUpdate = () => {
-          z.assign(ADMMFunctions.mean(xs))
-            .assign(ADMMFunctions.mean(us),DoubleFunctions.plus)
-            .assign(ADMMFunctions.shrinkage(lambda/rho/nSlices.toDouble))
-        }
-        for (_ <- 1 to maxIter) {
-          environments.foreach{_.xUpdate()}
-          zUpdate()
-          environments.foreach{_.uUpdate()}
-          if (printStuff) {
-            println("x update")
-            environments.foreach{env => println(algebra.norm2(env.x)) }
-            println("z update")
-            println(algebra.norm2(z))
-            println("u update")
-            environments.foreach{env => println(algebra.norm2(env.u))  }
-          }
-          println(environments.map{env => env.loss(env.x)}.reduce(_+_))
-          val xhatdiff= ADMMFunctions.mean(environments.map{_.x})
-          println(algebra.norm2(xhatdiff.assign(z, DoubleFunctions.minus)))
-          println(z.cardinality())
-        }
-        z
-  }*/
-
-
-  /*val zUpdate = () => {
-   z.assign(ADMMFunctions.mean(xs))
-     .assign(ADMMFunctions.mean(us), DoubleFunctions.plus)
-     .assign(ADMMFunctions.shrinkage(lambda / rho / nSlices.toDouble))
- } */
-
-
-  /*def solve(data : (SampleSet,OutputSet)): DoubleMatrix1D = {
-
-    val nDocsPerSlice = data._1.rows()
-    val nFeatures = data._1.columns()
-    val z: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-
-    val x: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-    val u: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-
-    val environments = MapEnvironment(data._1, data._2, x,u,z)
-
-    val xs = environments.x
-    val us = environments.u
-    val zUpdate = () => {
-      z.assign(ADMMFunctions.mean(xs))
-        .assign(ADMMFunctions.mean(us),DoubleFunctions.plus)
-        .assign(ADMMFunctions.shrinkage(lambda/rho/nSlices.toDouble))
-    }
-    for (_ <- 1 to maxIter) {
-      environments.foreach{_.xUpdate()}
-      zUpdate()
-      environments.foreach{_.uUpdate()}
-      if (printStuff) {
-        println("x update")
-        environments.foreach{env => println(algebra.norm2(env.x)) }
-        println("z update")
-        println(algebra.norm2(z))
-        println("u update")
-        environments.foreach{env => println(algebra.norm2(env.u))  }
-      }
-      println(environments.map{env => env.loss(env.x)}.reduce(_+_))
-      val xhatdiff= ADMMFunctions.mean(environments.map{_.x})
-      println(algebra.norm2(xhatdiff.assign(z, DoubleFunctions.minus)))
-      println(z.cardinality())
-    }
-    z
-  } */
-
-
   def uUpdate(sample : SampleSet, output: OutputSet, x: Vector, u: Vector) : (SampleSet,OutputSet,Vector,Vector) = {
-    var z = broadcastZ.Value
+    val z = broadcastZ.Value
     u.assign(x,DoubleFunctions.plus)
       .assign(z,DoubleFunctions.minus)
     (sample,output,x,u)
@@ -232,20 +142,17 @@ object SLRDistributedSpark {
     lambda = args(4).toDouble
     rho = args(5).toDouble
     maxIter = args(6).toInt
-    val dataList = getDatasetList(nDocs,nFeatures,docIndex,nSlices)
+    val dataList = ReutersRDD.localTextRDD(sc, "etc/data/labeled_rcv1.admm.data").splitSets(nSlices)
     val distData = sc.parallelize(dataList).cache()
 
     
     val z: Vector = DoubleFactory1D.dense.make(nFeatures+1)
     val broadcastZ = sc.broadcast(z)
-
     val accumX = sc.accumulator(0) 
     val accumU = sc.accumulator(0)
-    
     val distDataXU = distData.map {
      data => addXU(data,nFeatures)
     }
-
     for (_ <- 1 to maxIter) {
       val distDataXUpdated = distDataXU.map {
         data => xUpdate(data._1, data._2, data._3, data._4)
@@ -258,8 +165,7 @@ object SLRDistributedSpark {
       }
     }
 
-
-    val xEst = solve(data)
+    /*val xEst = solve(data)
     val x = xEst.viewPart(1,nFeatures)
     val goodslices = data match {
       case SlicedDataSet(slices) => {
@@ -346,6 +252,6 @@ object SLRDistributedSpark {
         println(badSlices.map{a => math.pow(a-badavg,2)}.reduce{_+_}/badSlices.size)
         println(goodslices.size.toDouble/(goodslices.size + badSlices.size))
       }
-    }
+    } */
   }
 }
