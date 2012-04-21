@@ -34,7 +34,7 @@ object SLRDistributedSpark {
 
   def xUpdate(A: SampleSet, b: OutputSet, x: Vector, u: Vector): (SampleSet, OutputSet, Vector, Vector) = {
 
-    var z = broadcastz.Value
+    val z = spark.broadcast.Broadcast.broadcastZ.Value
 
     val bPrime = b.copy()
     bPrime.assign(DoubleFunctions.mult(2.0)).assign(DoubleFunctions.minus(1.0)).assign(DoubleFunctions.mult(alpha))
@@ -161,7 +161,14 @@ object SLRDistributedSpark {
   }*/
 
 
-  def solve(data : (SampleSet,OutputSet)): DoubleMatrix1D = {
+  /*val zUpdate = () => {
+   z.assign(ADMMFunctions.mean(xs))
+     .assign(ADMMFunctions.mean(us), DoubleFunctions.plus)
+     .assign(ADMMFunctions.shrinkage(lambda / rho / nSlices.toDouble))
+ } */
+
+
+  /*def solve(data : (SampleSet,OutputSet)): DoubleMatrix1D = {
 
     val nDocsPerSlice = data._1.rows()
     val nFeatures = data._1.columns()
@@ -197,22 +204,16 @@ object SLRDistributedSpark {
       println(z.cardinality())
     }
     z
-  }
-
-
-
+  } */
 
 
   def uUpdate(sample : SampleSet, output: OutputSet, x: Vector, u: Vector) : (SampleSet,OutputSet,Vector,Vector) = {
-    var z = broadcastz.Value
+    var z = broadcastZ.Value
     u.assign(x,DoubleFunctions.plus)
       .assign(z,DoubleFunctions.minus)
     (sample,output,x,u)
   }
 
-
-
-  
   def addXU (data: (SampleSet,OutputSet), nFeatures : Int) : (SampleSet,OutputSet,Vector,Vector) = {
     
     val x: Vector = DoubleFactory1D.dense.make(nFeatures+1)
@@ -221,20 +222,9 @@ object SLRDistributedSpark {
     (data._1,data._2,x,u)
   }
 
-
-
-
-
-
-
-
-
-
-
   def main(args: Array[String]) {
 
     val sc = new SparkContext("local[2]", "SLRDist")
-
     val nDocs = args(0).toInt
     val nFeatures = args(1).toInt
     val docIndex = args(2).toInt
@@ -247,34 +237,25 @@ object SLRDistributedSpark {
 
     
     val z: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-    val broadcastz = sc.broadcast(z)
+    val broadcastZ = sc.broadcast(z)
 
-    distData.foreach {
+    val accumX = sc.accumulator(0) 
+    val accumU = sc.accumulator(0)
+    
+    val distDataXU = distData.map {
      data => addXU(data,nFeatures)
     }
 
-
     for (_ <- 1 to maxIter) {
-
-      distData.foreach {
+      val distDataXUpdated = distDataXU.map {
         data => xUpdate(data._1, data._2, data._3, data._4)
       }
-
-
-      val xMean = distData. collect()
-      val uMean = distData.
-
-      val zUpdate = () => {
-        z.assign(ADMMFunctions.mean(xs))
-          .assign(ADMMFunctions.mean(us), DoubleFunctions.plus)
-          .assign(ADMMFunctions.shrinkage(lambda / rho / nSlices.toDouble))
-      }
-
-
-      distData.foreach {
+      val xMean = accumX.value / nSlices
+      val uMean = accumU.value / nSlices
+      val z = (xMean + uMean) * lambda / rho / nSlices
+      val distDataUUpdated = distDataXU.map {
         data => uUpdate(data._1, data._2, data._3, data._4)
       }
-
     }
 
 
