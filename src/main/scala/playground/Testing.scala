@@ -10,8 +10,15 @@ import cern.colt.matrix.tdouble.{DoubleMatrix1D, DoubleFactory1D, DoubleFactory2
 import cern.jet.math.tdouble.DoubleFunctions
 import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra
 import scala.util.control.Breaks._
+import spark.{SparkContext, HadoopRDD}
+import org.apache.hadoop.io.{LongWritable, Text}
+import org.apache.hadoop.mapred.{FileInputFormat, InputFormat, TextInputFormat, JobConf}
+import org.apache.hadoop.fs.Path
+import data.ReutersData.{ReutersRecord, ReutersSet}
+
 
 object Testing extends App {
+  def test1 = {
   val m = 2
   val C = DoubleFactory2D.dense.make(m,m,3.0)
   val x = DoubleFactory1D.dense.make(m,1.0)
@@ -65,6 +72,6 @@ object Testing extends App {
     x.assign(dx,DoubleFunctions.plusMultSecond(t))
     println(loss(x))
   }
-
+  }
 
 }
