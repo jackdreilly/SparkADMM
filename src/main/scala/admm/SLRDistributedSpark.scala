@@ -164,7 +164,8 @@ object SLRDistributedSpark {
         data => uUpdate(data._1, data._2, data._3, data._4)
       }
     }
-
+     println(z.viewPart(1,nFeatures))
+    
     /*val xEst = solve(data)
     val x = xEst.viewPart(1,nFeatures)
     val goodslices = data match {
