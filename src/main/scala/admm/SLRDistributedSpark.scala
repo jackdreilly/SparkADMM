@@ -11,6 +11,7 @@ import SparkContext._
 import data.ReutersData._
 
 
+
 /**
  * Created by IntelliJ IDEA.
  * User: Jojo
@@ -30,7 +31,7 @@ object SLRDistributedSpark {
 
   def xUpdate(A: SampleSet, b: OutputSet, x: Vector, u: Vector):  Vector = {
 
-    val z = broadcastZ.Value
+    val zz = broadcastZ.value
 
     val bPrime = b.copy()
     bPrime.assign(DoubleFunctions.mult(2.0)).assign(DoubleFunctions.minus(1.0)).assign(DoubleFunctions.mult(alpha))
@@ -47,7 +48,7 @@ object SLRDistributedSpark {
         .assign(DoubleFunctions.plus(1.0))
         .assign(DoubleFunctions.log)
       val normTerm = x.copy()
-      normTerm.assign(z, DoubleFunctions.minus)
+      normTerm.assign(zz, DoubleFunctions.minus)
         .assign(u, DoubleFunctions.plus)
       expTerm.zSum() + math.pow(algebra.norm2(normTerm), 2) * rho / 2
     }
@@ -60,7 +61,7 @@ object SLRDistributedSpark {
         .assign(DoubleFunctions.inv)
         .assign(expTerm, DoubleFunctions.mult)
       val secondTerm = x.copy()
-      secondTerm.assign(z, DoubleFunctions.minus)
+      secondTerm.assign(zz, DoubleFunctions.minus)
         .assign(u, DoubleFunctions.plus)
         .assign(DoubleFunctions.mult(rho))
       val returnValue = C.zMult(firstTerm, null, 1.0, 1.0, true)
@@ -73,7 +74,7 @@ object SLRDistributedSpark {
         .assign(DoubleFunctions.plus(1.0))
         .assign(DoubleFunctions.log)
       val normTerm = x.copy()
-      normTerm.assign(z, DoubleFunctions.minus)
+      normTerm.assign(zz, DoubleFunctions.minus)
         .assign(u, DoubleFunctions.plus)
       expTerm.zSum() + math.pow(algebra.norm2(normTerm), 2) * rho / 2
     }
@@ -118,9 +119,9 @@ object SLRDistributedSpark {
   var lambda = 2.0
 
   def uUpdate(sample : SampleSet, output: OutputSet, x: Vector, u: Vector) : (SampleSet,OutputSet,Vector,Vector) = {
-    val z = broadcastZ.Value
+    val zz = broadcastZ.value
     u.assign(x,DoubleFunctions.plus)
-      .assign(z,DoubleFunctions.minus)
+      .assign(zz,DoubleFunctions.minus)
     (sample,output,x,u)
   }
 
@@ -148,12 +149,12 @@ object SLRDistributedSpark {
     
     val z: Vector = DoubleFactory1D.dense.make(nFeatures+1)
     val broadcastZ = sc.broadcast(z)
-    val accumX = sc.accumulator(0) 
-    val accumU = sc.accumulator(0)
-    val distDataXU = distData.map {
+        val distDataXU = distData.map {
      data => addXU(data,nFeatures)
     }
     for (_ <- 1 to maxIter) {
+      val accumX = sc.accumulator(0)
+      val accumU = sc.accumulator(0)
       val distDataXUpdated = distDataXU.map {
         data => xUpdate(data._1, data._2, data._3, data._4)
       }
