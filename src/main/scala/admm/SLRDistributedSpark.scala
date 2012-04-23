@@ -29,7 +29,7 @@ object SLRDistributedSpark {
   val alpha = 1000.0
 
 
-  def xUpdate(A: SampleSet, b: OutputSet, x: DoubleMatrix1D, u: DoubleMatrix1D, z: DoubleMatrix1D ):  (SampleSet, OutputSet, DoubleMatrix1D, DoubleMatrix1D) = {
+  def xUpdate(A: SampleSet, b: OutputSet, x: DoubleMatrix1D, u: DoubleMatrix1D, z: DoubleMatrix1D ) {
 
     //val z = DoubleFactory1D.dense.make(oldZ.elements)
 
@@ -112,9 +112,6 @@ object SLRDistributedSpark {
       x0
     }
     x.assign(descent(x, 25))
-
-    (A, b, x, u)
-
   }
 
   var maxIter = 100
@@ -142,19 +139,17 @@ object SLRDistributedSpark {
     val sc = new SparkContext("local[2]", "SLRDist")
     val nDocs = args(0).toInt
     val nFeatures = args(1).toInt
-    val docIndex = args(2).toInt
+    val topicID = args(2).toInt
     val nSlices = args(3).toInt
     lambda = args(4).toDouble
     rho = args(5).toDouble
     maxIter = args(6).toInt
-    val distData = ReutersRDD.localTextRDD(sc, "etc/data/labeled_rcv1.admm.data").splitSets(nSlices)
+    val distData = ReutersRDD.localTextRDD(sc, "etc/data/labeled_rcv1.admm.data", nFeatures).splitSets(nSlices)
 
     
     val z: DoubleMatrix1D = DoubleFactory1D.dense.make(nFeatures+1)
     var broadcastZ = sc.broadcast(z)
-    var distDataXU = distData.map {
-     data => addXU(data.generateReutersSet(0),nFeatures)
-    }
+    var distDataXU = distData.map(data => addXU(data.generateReutersSet(topicID),nFeatures))
     
     val xMean = DoubleFactory1D.dense.make(nFeatures+1)
     val uMean = DoubleFactory1D.dense.make(nFeatures+1)
@@ -165,13 +160,14 @@ object SLRDistributedSpark {
 
       distDataXU = distDataXU.map {
         data => {
-          val newData  = xUpdate(data._1, data._2, data._3, data._4, broadcastZ.value)
-          val newX = Vector(newData._3.toArray)
-          val newU = Vector(newData._4.toArray)
-          accumX += newX
-          accumU += newU
-
-          newData
+          val A = data._1
+          val b = data._2
+          val x = data._3
+          val u = data._4
+          xUpdate(A,b,x,u, broadcastZ.value)
+          accumX += Vector(x.toArray())
+          accumU += Vector(u.toArray())
+          data
         }
       }
 
@@ -183,7 +179,7 @@ object SLRDistributedSpark {
         data => uUpdate(data._1, data._2, data._3, data._4, broadcastZ.value )
       }
     }
-     println(z.viewPart(1,nFeatures))
+     println(z.viewPart(1,nFeatures).cardinality())
     
    /* val x = z.viewPart(1,nFeatures)
     val goodslices = data match {

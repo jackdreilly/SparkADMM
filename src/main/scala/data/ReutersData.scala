@@ -131,9 +131,8 @@ object ReutersData {
     }
   }
 
-  class ReutersRDD(sc: SparkContext, filePath: String, jobConf: JobConf, maxSplits: Int = 10 ) extends TextFileRDD(sc, filePath, jobConf, maxSplits) {
+  class ReutersRDD(sc: SparkContext, filePath: String, jobConf: JobConf, maxSplits: Int = 10, n: Int = 1000 ) extends TextFileRDD(sc, filePath, jobConf, maxSplits) {
     val records = this.map(record => TaggedRecord.parse(record._2.toString()))
-    val n = 1000
     def splitSets(nSplits: Int): RDD[ReutersSet] = {
       class ReutersRDDSet(group: (Int, scala.Seq[TaggedRecord])) extends ReutersSet {
         val records = group._2.map(rec => rec.utRec)
@@ -166,11 +165,11 @@ object ReutersData {
   }
 
   object ReutersRDD {
-    def hdfsTextRDD(sc: SparkContext, filePath: String) = {
-      new ReutersRDD(sc, filePath, hdfsJobConf())
+    def hdfsTextRDD(sc: SparkContext, filePath: String, n: Int = 1000) = {
+      new ReutersRDD(sc, filePath, hdfsJobConf(), n=n)
     }
-    def localTextRDD(sc: SparkContext, filePath: String) = {
-      new ReutersRDD(sc, filePath, localJobConf)
+    def localTextRDD(sc: SparkContext, filePath: String, n: Int = 1000) = {
+      new ReutersRDD(sc, filePath, localJobConf, n= n)
     }
   }
 
