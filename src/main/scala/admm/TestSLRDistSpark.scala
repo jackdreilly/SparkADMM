@@ -1,6 +1,6 @@
 package admm
 
-
+import spark._
 import spark.SparkContext
 import cern.colt.matrix.tdouble.{DoubleMatrix1D, DoubleFactory1D}
 
@@ -18,6 +18,7 @@ object TestSLRDistSpark {
 
   def main(args: Array[String]) {
     val sc = new SparkContext("local[2]", "TestSLRDist")
+
     val v1 = DoubleFactory1D.dense.make(2)
     val v2 = DoubleFactory1D.dense.make(2)
     val v3 = DoubleFactory1D.dense.make(2)
@@ -40,13 +41,19 @@ object TestSLRDistSpark {
     println(a) */
 
     def modif (v: DoubleMatrix1D ) { v.setQuick(1,10)}
-    modif(v1)
-    println("v1 after update:")
-    println(v1)
+
     distData.foreach(
     data => modif(data)
     )
-    distData.toArray().foreach(println)
+    distData.take(5).foreach(println)
+
+
+    modif(v1)
+    println("v1 after update:")
+    println(v1)
+
+    distData.take(5).foreach(println)
   }
+
 
 }
