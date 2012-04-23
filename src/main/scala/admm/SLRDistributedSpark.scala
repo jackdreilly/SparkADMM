@@ -68,16 +68,6 @@ object SLRDistributedSpark {
       returnValue.assign(secondTerm, DoubleFunctions.plus)
       returnValue
     }
-    /*def loss(x: DoubleMatrix1D): Double = {
-      val expTerm = C.zMult(x, null)
-      expTerm.assign(DoubleFunctions.exp)
-        .assign(DoubleFunctions.plus(1.0))
-        .assign(DoubleFunctions.log)
-      val normTerm = x.copy()
-      normTerm.assign(z, DoubleFunctions.minus)
-        .assign(u, DoubleFunctions.plus)
-      expTerm.zSum() + math.pow(algebra.norm2(normTerm), 2) * rho / 2
-    } */
     def backtracking(x: DoubleMatrix1D, dx: DoubleMatrix1D, grad: DoubleMatrix1D): Double = {
       val t0 = 1.0
       val alpha = .1
@@ -166,10 +156,16 @@ object SLRDistributedSpark {
           val u = data._4
           xUpdate(A,b,x,u, broadcastZ.value)
           accumX += Vector(x.toArray())
+          //println("accumX sum elements")
+          //println(accumX.value.sum)
           accumU += Vector(u.toArray())
+          //println("accumU sum elements")
+          //println(accumU.value.sum)
           data
         }
       }
+
+      distDataXU.reduce{(a,b) => a}
 
       xMean.assign(accumX.value.elements.map (_ / nSlices))
       uMean.assign(accumU.value.elements.map (_ / nSlices))
