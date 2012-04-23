@@ -5,11 +5,11 @@ import cern.colt.matrix.tdouble.algo.DenseDoubleAlgebra
 import cern.jet.math.tdouble.DoubleFunctions
 import util.control.Breaks._
 import data.{SlicedDataSet, SingleSet, DataSet}
-import cern.colt.matrix.tdouble.{DoubleFactory1D, DoubleFactory2D, DoubleMatrix1D}
 import spark.SparkContext
 import SparkContext._
 import data.ReutersData._
-
+import cern.colt.matrix.tdouble.{DoubleMatrix1D, DoubleFactory1D, DoubleFactory2D}
+import Vector._
 
 
 /**
@@ -24,14 +24,14 @@ object SLRDistributedSpark {
 
   val printStuff = false
   var counter = 0
-  type Vector = DoubleMatrix1D
+  //type Vector = DoubleMatrix1D
   val algebra = new DenseDoubleAlgebra()
   val alpha = 1000.0
 
 
-  def xUpdate(A: SampleSet, b: OutputSet, x: Vector, u: Vector):  Vector = {
+  def xUpdate(A: SampleSet, b: OutputSet, x: DoubleMatrix1D, u: DoubleMatrix1D, z: DoubleMatrix1D ):  (SampleSet, OutputSet, DoubleMatrix1D, DoubleMatrix1D) = {
 
-    val zz = broadcastZ.value
+    //val z = DoubleFactory1D.dense.make(oldZ.elements)
 
     val bPrime = b.copy()
     bPrime.assign(DoubleFunctions.mult(2.0)).assign(DoubleFunctions.minus(1.0)).assign(DoubleFunctions.mult(alpha))
@@ -42,18 +42,18 @@ object SLRDistributedSpark {
     val m = A.rows()
     val n = A.columns()
 
-    def loss(x: Vector): Double = {
+    def loss(x: DoubleMatrix1D): Double = {
       val expTerm = C.zMult(x, null)
       expTerm.assign(DoubleFunctions.exp)
         .assign(DoubleFunctions.plus(1.0))
         .assign(DoubleFunctions.log)
       val normTerm = x.copy()
-      normTerm.assign(zz, DoubleFunctions.minus)
+      normTerm.assign(z, DoubleFunctions.minus)
         .assign(u, DoubleFunctions.plus)
       expTerm.zSum() + math.pow(algebra.norm2(normTerm), 2) * rho / 2
     }
 
-    def gradient(x: Vector): Vector = {
+    def gradient(x: DoubleMatrix1D): DoubleMatrix1D = {
       val expTerm = C.zMult(x, null)
       expTerm.assign(DoubleFunctions.exp)
       val firstTerm = expTerm.copy()
@@ -61,24 +61,24 @@ object SLRDistributedSpark {
         .assign(DoubleFunctions.inv)
         .assign(expTerm, DoubleFunctions.mult)
       val secondTerm = x.copy()
-      secondTerm.assign(zz, DoubleFunctions.minus)
+      secondTerm.assign(z, DoubleFunctions.minus)
         .assign(u, DoubleFunctions.plus)
         .assign(DoubleFunctions.mult(rho))
       val returnValue = C.zMult(firstTerm, null, 1.0, 1.0, true)
       returnValue.assign(secondTerm, DoubleFunctions.plus)
       returnValue
     }
-    def loss(x: Vector): Double = {
+    /*def loss(x: DoubleMatrix1D): Double = {
       val expTerm = C.zMult(x, null)
       expTerm.assign(DoubleFunctions.exp)
         .assign(DoubleFunctions.plus(1.0))
         .assign(DoubleFunctions.log)
       val normTerm = x.copy()
-      normTerm.assign(zz, DoubleFunctions.minus)
+      normTerm.assign(z, DoubleFunctions.minus)
         .assign(u, DoubleFunctions.plus)
       expTerm.zSum() + math.pow(algebra.norm2(normTerm), 2) * rho / 2
-    }
-    def backtracking(x: Vector, dx: Vector, grad: Vector): Double = {
+    } */
+    def backtracking(x: DoubleMatrix1D, dx: DoubleMatrix1D, grad: DoubleMatrix1D): Double = {
       val t0 = 1.0
       val alpha = .1
       val beta = .5
@@ -98,7 +98,7 @@ object SLRDistributedSpark {
       helper(t0)
     }
 
-    def descent(x0: DoubleMatrix1D, maxIter: Int): Vector = {
+    def descent(x0: DoubleMatrix1D, maxIter: Int): DoubleMatrix1D = {
       val tol = 1e-4
       breakable {
         for (i <- 1 to maxIter) {
@@ -112,23 +112,27 @@ object SLRDistributedSpark {
       x0
     }
     x.assign(descent(x, 25))
+
+    (A, b, x, u)
+
   }
 
   var maxIter = 100
   var rho = 1.0
   var lambda = 2.0
 
-  def uUpdate(sample : SampleSet, output: OutputSet, x: Vector, u: Vector) : (SampleSet,OutputSet,Vector,Vector) = {
-    val zz = broadcastZ.value
+  def uUpdate(sample : SampleSet, output: OutputSet, x: DoubleMatrix1D, u: DoubleMatrix1D, z: DoubleMatrix1D ) : (SampleSet,OutputSet,DoubleMatrix1D,DoubleMatrix1D) = {
+   // val z =  DoubleFactory1D.dense.make(oldZ.elements)
     u.assign(x,DoubleFunctions.plus)
-      .assign(zz,DoubleFunctions.minus)
+      .assign(z,DoubleFunctions.minus)
+
     (sample,output,x,u)
   }
 
-  def addXU (data: (SampleSet,OutputSet), nFeatures : Int) : (SampleSet,OutputSet,Vector,Vector) = {
+  def addXU (data: (SampleSet,OutputSet), nFeatures : Int) : (SampleSet,OutputSet,DoubleMatrix1D,DoubleMatrix1D) = {
     
-    val x: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-    val u: Vector = DoubleFactory1D.dense.make(nFeatures+1)
+    val x: DoubleMatrix1D = DoubleFactory1D.dense.make(nFeatures+1)
+    val u: DoubleMatrix1D = DoubleFactory1D.dense.make(nFeatures+1)
     
     (data._1,data._2,x,u)
   }
@@ -143,32 +147,45 @@ object SLRDistributedSpark {
     lambda = args(4).toDouble
     rho = args(5).toDouble
     maxIter = args(6).toInt
-    val dataList = ReutersRDD.localTextRDD(sc, "etc/data/labeled_rcv1.admm.data").splitSets(nSlices)
-    val distData = sc.parallelize(dataList).cache()
+    val distData = ReutersRDD.localTextRDD(sc, "etc/data/labeled_rcv1.admm.data").splitSets(nSlices)
 
     
-    val z: Vector = DoubleFactory1D.dense.make(nFeatures+1)
-    val broadcastZ = sc.broadcast(z)
-        val distDataXU = distData.map {
-     data => addXU(data,nFeatures)
+    val z: DoubleMatrix1D = DoubleFactory1D.dense.make(nFeatures+1)
+    var broadcastZ = sc.broadcast(z)
+    var distDataXU = distData.map {
+     data => addXU(data.generateReutersSet(0),nFeatures)
     }
+    
+    val xMean = DoubleFactory1D.dense.make(nFeatures+1)
+    val uMean = DoubleFactory1D.dense.make(nFeatures+1)
+    
     for (_ <- 1 to maxIter) {
-      val accumX = sc.accumulator(0)
-      val accumU = sc.accumulator(0)
-      val distDataXUpdated = distDataXU.map {
-        data => xUpdate(data._1, data._2, data._3, data._4)
+      val accumX = sc.accumulator(Vector.zeros(nFeatures+1))
+      val accumU = sc.accumulator(Vector.zeros(nFeatures+1))
+
+      distDataXU = distDataXU.map {
+        data => {
+          val newData  = xUpdate(data._1, data._2, data._3, data._4, broadcastZ.value)
+          val newX = Vector(newData._3.toArray)
+          val newU = Vector(newData._4.toArray)
+          accumX += newX
+          accumU += newU
+
+          newData
+        }
       }
-      val xMean = accumX.value / nSlices
-      val uMean = accumU.value / nSlices
-      val z = (xMean + uMean) * lambda / rho / nSlices
-      val distDataUUpdated = distDataXU.map {
-        data => uUpdate(data._1, data._2, data._3, data._4)
+
+      xMean.assign(accumX.value.elements.map (_ / nSlices))
+      uMean.assign(accumU.value.elements.map (_ / nSlices))
+      z.assign(xMean,DoubleFunctions.plus).assign(uMean,DoubleFunctions.plus).assign(DoubleFunctions.mult(lambda / rho / nSlices))
+      broadcastZ = sc.broadcast(z)
+      distDataXU = distDataXU.map {
+        data => uUpdate(data._1, data._2, data._3, data._4, broadcastZ.value )
       }
     }
      println(z.viewPart(1,nFeatures))
     
-    /*val xEst = solve(data)
-    val x = xEst.viewPart(1,nFeatures)
+   /* val x = z.viewPart(1,nFeatures)
     val goodslices = data match {
       case SlicedDataSet(slices) => {
         slices.map{
@@ -254,6 +271,6 @@ object SLRDistributedSpark {
         println(badSlices.map{a => math.pow(a-badavg,2)}.reduce{_+_}/badSlices.size)
         println(goodslices.size.toDouble/(goodslices.size + badSlices.size))
       }
-    } */
+    }*/
   }
 }
